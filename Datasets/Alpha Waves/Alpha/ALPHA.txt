@@ -1,0 +1,13 @@
+# Marker IDs can be arbitrary strings.
+# Marker ID,	Time (in s)
+1,	7.4152
+2,	15.9464
+1,	23.0423
+2,	30.9504
+1,	36.5769
+2,	45.4212
+1,	52.1854
+2,	59.7060
+
+1 = closing eyes
+2 = opening eyes
