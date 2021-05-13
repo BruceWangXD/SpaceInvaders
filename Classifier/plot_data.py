@@ -27,14 +27,18 @@ def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", before_
     ax[i].fill_between(time_seq, ymax, ymin,
                      where = left_events_bool,
                      color = 'g',
+                     label = "L",
                      alpha=shade_alpha)
 
     ax[i].fill_between(time_seq, ymax, ymin,
                      where = right_events_bool,
                      color = 'r',
+                     label = "R",
                      alpha=shade_alpha)
     
     ax[i].set_title(title)
+    
+    ax[i].legend()
     
     
     
@@ -101,6 +105,43 @@ def plot_predictions(wav_array, samprate, labels_dat, predictions, predictions_t
                      color = 'y',
                      label = "Pred idk",
                      alpha=pred_alpha)
+    
+    ax[i].set_title(title)
+    ax[i].legend()
+    
+    
+    
+def plot_detection_errors(wav_array, samprate, fp, fn, ax, i,
+                     title="", alpha=0.2,
+                     wave_alpha=1, miny = -100, maxy = 100):
+    
+    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate
+
+        
+    fp_preds_bool = np.array([False]*len(time_seq))
+    for times in fp:
+        fp_preds_bool = ( (time_seq > times[0]) & (time_seq < times[1]) ) | fp_preds_bool
+
+    fn_preds_bool = np.array([False]*len(time_seq))
+    for times in fn:
+        fn_preds_bool = ( (time_seq > times[0]) & (time_seq < times[1]) ) | fn_preds_bool
+
+    ax[i].plot(time_seq, wav_array, alpha=wave_alpha)
+
+    
+    # Plot predictions
+    ax[i].fill_between(time_seq, maxy, miny,
+                     where = fp_preds_bool,
+                     color = 'r',
+                     label = "False Positive",
+                     alpha=alpha)
+    
+    ax[i].fill_between(time_seq, maxy, miny,
+                     where = fn_preds_bool,
+                     color = 'darkorange',
+                     label = "False Negative",
+                     alpha=alpha)
+
     
     ax[i].set_title(title)
     ax[i].legend()
