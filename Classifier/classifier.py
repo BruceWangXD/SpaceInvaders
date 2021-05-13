@@ -10,7 +10,7 @@ from Classifier.load_data import read_arduino, process_data, read_arduinbro
 def classify_event(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
     
-    fs = samprate/downsample_rate;
+    fs = samprate/downsample_rate
     dt = 1/fs
     t = np.arange(0, (len(arr_ds)*dt), dt)
 
@@ -103,16 +103,14 @@ def streaming_classifier(
     verbose=False, # lol
     live = False # Whether we're
 ):
-    
-    ## Create Smart Threshold ##
-    st_segment = wav_array[0:hyp_event_smart_threshold_window*samprate]
-    st_range = np.max(st_segment) - np.min(st_segment)
-    hyp_event_threshold = st_range*hyp_event_smart_threshold_factor
-    
+
     
     
     if total_time is None:
-        total_time = len(wav_array)/samprate
+        try:
+            total_time = len(wav_array)/samprate
+        except:
+            total_time = 1000000 # Just a large number
     if store_events:
         predictions_storage = []
     
@@ -141,6 +139,12 @@ def streaming_classifier(
     # Hyperparameter conversions
     hyp_detection_buffer_start_ind = int(round(hyp_detection_buffer_start * samprate))
     hyp_detection_buffer_end_ind = int(round(hyp_detection_buffer_end * samprate))
+    
+    
+    ## Create Smart Threshold ##
+    calibrate = True
+    N_loops_calibration = hyp_event_smart_threshold_window//(window_size/N_loops_over_window)
+    
 
 
     event_history = np.array([False]*hyp_event_history)
@@ -158,14 +162,28 @@ def streaming_classifier(
 
         if k < N_loops_over_window:
             if k==0:
+                data_cal = data_temp
                 data_plot = data_temp
             else:
-                data_plot = np.append(data_temp,data_plot)
-
+                data_plot = np.append(data_temp, data_plot)
+                if calibrate:
+                    data_cal = np.append(data_temp, data_cal)
             continue
         else:
             data_plot = np.roll(data_plot,len(data_temp))
             data_plot[0:len(data_temp)] = data_temp
+            
+            if calibrate:
+                data_cal = np.append(data_temp,data_cal)
+
+                if (k > N_loops_calibration):
+                    st_range = np.max(data_cal) - np.min(data_cal)
+                    hyp_event_threshold = st_range*hyp_event_smart_threshold_factor
+                    with open("./print.txt", "a") as file:
+                        file.write(str(hyp_event_threshold))
+                    calibrate = False
+                continue
+                
 
 
         ### CLASSIFIER ###
