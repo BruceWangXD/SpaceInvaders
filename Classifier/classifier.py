@@ -131,6 +131,40 @@ def zeroes_classifier(arr, downsample_rate=10, window_size_seconds=0.3, ave_heig
         i += 1
     return '_'
 
+def one_pronged_smoothing_classifier(arr, downsample_rate=10, window_size_seconds=0.3, max_loops=10, height_threshold=50):
+    arr_ds = arr[0::downsample_rate]
+    
+    fs = samprate/downsample_rate
+    dt = 1/fs
+    t = np.arange(0, (len(arr_ds)*dt), dt)
+
+    # Smooth wave
+    window_length = int(window_size_seconds*samprate/downsample_rate + 1)
+    
+    #start = time.time()
+    filtered_arr = signal.savgol_filter(arr_ds, window_length, 1)
+    #end = time.time()
+    #print("Sav-Gol took:", end - start, "seconds")
+
+
+    # Indices of positive maxima
+    max_locs = np.array(signal.argrelextrema(filtered_arr, np.greater)[0])
+    max_vals = filtered_arr[max_locs]
+    max_locs = max_locs[max_vals > height_threshold]
+    
+    # Indices of negative minima
+    min_locs = np.array(signal.argrelextrema(filtered_arr, np.less)[0])
+    min_vals = filtered_arr[min_locs]
+    min_locs = min_locs[min_vals < -height_threshold]
+    #print(len(max_locs), " ", len(min_locs))
+    if len(max_locs) == 0 or len(max_locs) == 0:
+        return "_"
+    if max_locs[0] < min_locs[0]:
+        return "R"
+    elif min_locs[0] < max_locs[0]:
+        return "L"
+    
+    return "_"
 
 def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
