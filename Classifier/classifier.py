@@ -85,6 +85,53 @@ def classify_event(arr, samprate, downsample_rate=10, window_size_seconds=0.3, m
         return "_"
 
 
+#Looks for x samples (after downsampling) that are consecutively positive / negative.
+#Classifies only using the first hump of the wave.
+from numba import njit
+
+@njit
+def zeroes_classifier(arr, downsample_rate=10, window_size_seconds=0.3, ave_height = 350):
+    arr_ds = arr[0::downsample_rate]
+    arr_sign = np.sign(arr_ds)
+
+    consec_neg = 0
+    consec_pos = 0
+    i = 0
+    while i < len(arr_sign):
+        if consec_neg == 0 and consec_pos == 0:
+            if arr_sign[i] == 1:
+                consec_pos += 1
+            if arr_sign[i] == -1:
+                consec_neg += 1
+        if consec_neg > 0:
+            if arr_sign[i] == 1:
+                consec_neg = 0
+                consec_pos = 1
+            elif arr_sign[i] == -1:
+                consec_neg += 1
+                consec_pos = 0
+            elif arr_sign[i] == 0:
+                consec_neg, consec_pos = 0, 0
+        if consec_pos > 0:
+            if arr_sign[i] == -1:
+                consec_pos = 0
+                consec_neg = 1
+            elif arr_sign[i] == 1:
+                consec_pos += 1
+                consec_neg = 0
+            elif arr_sign[i] == 0:
+                consec_neg, consec_pos = 0, 0
+
+        if consec_neg > 200:
+            if np.sum(arr_ds[i - 200: i]) / 200 < -1 * ave_height:
+                return 'L'          
+        if consec_pos > 200:
+            if np.sum(arr_ds[i - 200: i]) / 200 > ave_height:
+                return 'R'
+        i += 1
+    return '_'
+
+
 def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
