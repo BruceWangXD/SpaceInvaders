@@ -84,18 +84,18 @@ def classify_event(arr, samprate, downsample_rate=10, window_size_seconds=0.3, m
     else:
         return "_"
 
-
+#ZEROES CLASSIFIER:
 #Looks for x samples (after downsampling) that are consecutively positive / negative.
 #Classifies only using the first hump of the wave.
 from numba import njit
 
-@njit
+@njit #numba 'decorator' that performs just-in-time (jit) compilation
 def zeroes_classifier(arr, downsample_rate=10, window_size_seconds=0.3, ave_height = 350):
     arr_ds = arr[0::downsample_rate]
     arr_sign = np.sign(arr_ds)
 
-    consec_neg = 0
-    consec_pos = 0
+    consec_neg = 0 #number of consecutive samples that are below x-axis
+    consec_pos = 0 #number of consecutive samples that are above x-axis
     i = 0
     while i < len(arr_sign):
         if consec_neg == 0 and consec_pos == 0:
@@ -123,10 +123,10 @@ def zeroes_classifier(arr, downsample_rate=10, window_size_seconds=0.3, ave_heig
                 consec_neg, consec_pos = 0, 0
 
         if consec_neg > 200:
-            if np.sum(arr_ds[i - 200: i]) / 200 < -1 * ave_height:
+            if (np.sum(arr_ds[i - 200: i]) / 200) < -1 * ave_height:
                 return 'L'          
         if consec_pos > 200:
-            if np.sum(arr_ds[i - 200: i]) / 200 > ave_height:
+            if (np.sum(arr_ds[i - 200: i]) / 200) > ave_height:
                 return 'R'
         i += 1
     return '_'
