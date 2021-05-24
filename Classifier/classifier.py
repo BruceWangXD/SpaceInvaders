@@ -179,8 +179,14 @@ path = "C:/Users/souls/Documents/Aqua10/"
 step_csv = "catch22_step_selected_features.csv"
 
 catch22_step_training_data = pd.read_csv(path+step_csv)
+
+X_train = catch22_step_training_data.iloc[:,0:-1]
+y_labels = catch22_step_training_data.iloc[:,-1]
+    
+neigh = KNeighborsClassifier(n_neighbors=5)
+neigh.fit(X_train, y_labels)
 '''
-def catch22_knn_classifier(arr, downsample_rate=10):
+def catch22_knn_classifier(arr, neigh, downsample_rate=10):
     arr_ds = arr[0::downsample_rate]
     arr_list = arr_ds.tolist() # single catch22 feature won't take numpy arrays, only lists or tuples
     
@@ -197,6 +203,7 @@ def catch22_knn_classifier(arr, downsample_rate=10):
 def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
+    classifier, 
     window_size = 1.5, # Total detection window [s]
     N_loops_over_window = 15, # implicitly defines buffer to be 1/x of the window
     hyp_detection_buffer_end = 0.3, # seconds - how much time to shave off end of the window in order to define the middle portion
@@ -214,7 +221,8 @@ def streaming_classifier(
     store_events = False, # Whether to return the classification window array for debugging purposes
     verbose=False, # lol
     live = False, # Whether we're
-    timeout = False
+    timeout = False,
+    nn = None, 
 ):
 
     
@@ -322,7 +330,10 @@ def streaming_classifier(
         ## Classification
 
         if np.all(event_history[0:hyp_consecutive_triggers]) and primed:
-            prediction = classify_event(data_plot, samprate)
+            if nn is not None:
+                prediction = classify_event(data_plot, nn, samprate)
+            else:
+                prediction = classify_event(data_plot, samprate)
             
             
             print(f"CONGRATULATIONS, ITS AN {prediction}!") if verbose else None
