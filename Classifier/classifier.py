@@ -318,10 +318,10 @@ def streaming_classifier(
             if np.all(~event_history[0:hyp_consecutive_reset]):
                 primed = True
         else:
+            timer -= 1
             if timer < 0:
                 primed = True
 
-        timer -= 1
 
         ## PLOT ###
 
