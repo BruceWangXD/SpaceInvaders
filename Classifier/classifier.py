@@ -166,9 +166,44 @@ def one_pronged_smoothing_classifier(arr, downsample_rate=10, window_size_second
     
     return "_"
 
+'''
+catch22 kNN classifier (using stepwise selected features)
+arr: the array (the event) to be classified (a numpy array)
+
+Prep:
+from catch22 import catch22_all
+import catch22
+from sklearn.neighbors import KNeighborsClassifier
+
+path = "C:/Users/souls/Documents/Aqua10/"
+step_csv = "catch22_step_selected_features.csv"
+
+catch22_step_training_data = pd.read_csv(path+step_csv)
+
+X_train = catch22_step_training_data.iloc[:,0:-1]
+y_labels = catch22_step_training_data.iloc[:,-1]
+    
+neigh = KNeighborsClassifier(n_neighbors=5)
+neigh.fit(X_train, y_labels)
+'''
+def catch22_knn_classifier(arr, neigh, downsample_rate=10):
+    arr_ds = arr[0::downsample_rate]
+    arr_list = arr_ds.tolist() # single catch22 feature won't take numpy arrays, only lists or tuples
+    
+    feature_one = catch22.DN_HistogramMode_5(arr_list)
+    feature_two = catch22.SB_BinaryStats_mean_longstretch1(arr_list)
+    feature_three = catch22.FC_LocalSimple_mean1_tauresrat(arr_list)
+    feature_four = catch22.DN_OutlierInclude_p_001_mdrmd(arr_list)
+    feature_five = catch22.SP_Summaries_welch_rect_area_5_1(arr_list)
+    
+    test_features = [[feature_one, feature_two, feature_three, feature_four, feature_five]]
+    
+    return neigh.predict(test_features)[0] # returns a single item list, so use index 0 to return the prediction itself
+
 def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
+    classifier, 
     window_size = 1.5, # Total detection window [s]
     N_loops_over_window = 15, # implicitly defines buffer to be 1/x of the window
     hyp_detection_buffer_end = 0.3, # seconds - how much time to shave off end of the window in order to define the middle portion
@@ -186,7 +221,8 @@ def streaming_classifier(
     store_events = False, # Whether to return the classification window array for debugging purposes
     verbose=False, # lol
     live = False, # Whether we're
-    timeout = False
+    timeout = False,
+    nn = None, 
 ):
 
     
@@ -294,7 +330,10 @@ def streaming_classifier(
         ## Classification
 
         if np.all(event_history[0:hyp_consecutive_triggers]) and primed:
-            prediction = classify_event(data_plot, samprate)
+            if nn is not None:
+                prediction = classify_event(data_plot, nn, samprate)
+            else:
+                prediction = classify_event(data_plot, samprate)
             
             
             print(f"CONGRATULATIONS, ITS AN {prediction}!") if verbose else None
