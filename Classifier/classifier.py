@@ -7,7 +7,11 @@ import numpy as np
 from Classifier.load_data import read_arduino, process_data, read_arduinbro
 
 
-def classify_event(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
+
+
+
+
+def three_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
     
     fs = samprate/downsample_rate
@@ -90,7 +94,7 @@ def classify_event(arr, samprate, downsample_rate=10, window_size_seconds=0.3, m
 from numba import njit
 
 @njit #numba 'decorator' that performs just-in-time (jit) compilation
-def zeroes_classifier(arr, downsample_rate=10, window_size_seconds=0.3, ave_height = 350):
+def zeroes_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, ave_height = 350):
     arr_ds = arr[0::downsample_rate]
     arr_sign = np.sign(arr_ds)
 
@@ -131,7 +135,7 @@ def zeroes_classifier(arr, downsample_rate=10, window_size_seconds=0.3, ave_heig
         i += 1
     return '_'
 
-def one_pronged_smoothing_classifier(arr, downsample_rate=10, window_size_seconds=0.3, max_loops=10, height_threshold=50):
+def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10, height_threshold=50):
     arr_ds = arr[0::downsample_rate]
     
     fs = samprate/downsample_rate
@@ -166,16 +170,17 @@ def one_pronged_smoothing_classifier(arr, downsample_rate=10, window_size_second
     
     return "_"
 
-'''
-catch22 kNN classifier (using stepwise selected features)
-arr: the array (the event) to be classified (a numpy array)
 
-Prep:
+# catch22 kNN classifier (using stepwise selected features)
+#arr: the array (the event) to be classified (a numpy array)
+
+#Prep:
+
 from catch22 import catch22_all
 import catch22
 from sklearn.neighbors import KNeighborsClassifier
 
-path = "C:/Users/souls/Documents/Aqua10/"
+path = ""
 step_csv = "catch22_step_selected_features.csv"
 
 catch22_step_training_data = pd.read_csv(path+step_csv)
@@ -185,8 +190,8 @@ y_labels = catch22_step_training_data.iloc[:,-1]
     
 neigh = KNeighborsClassifier(n_neighbors=5)
 neigh.fit(X_train, y_labels)
-'''
-def catch22_knn_classifier(arr, neigh, downsample_rate=10):
+
+def catch22_knn_classifier(arr, samprate, downsample_rate=10):
     arr_ds = arr[0::downsample_rate]
     arr_list = arr_ds.tolist() # single catch22 feature won't take numpy arrays, only lists or tuples
     
@@ -200,10 +205,14 @@ def catch22_knn_classifier(arr, neigh, downsample_rate=10):
     
     return neigh.predict(test_features)[0] # returns a single item list, so use index 0 to return the prediction itself
 
+
+
+
+
 def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
-    classifier, 
+    classifier = three_pronged_smoothing_classifier, 
     window_size = 1.5, # Total detection window [s]
     N_loops_over_window = 15, # implicitly defines buffer to be 1/x of the window
     hyp_detection_buffer_end = 0.3, # seconds - how much time to shave off end of the window in order to define the middle portion
@@ -220,12 +229,11 @@ def streaming_classifier(
     plot = False, # Whether to plot the livestream data
     store_events = False, # Whether to return the classification window array for debugging purposes
     verbose=False, # lol
-    live = False, # Whether we're
-    timeout = False,
-    nn = None, 
-):
-
+    live = False, # Whether we're live
+    timeout = False):
     
+    
+    ### Initialisation ###
     
     if total_time is None:
         try:
@@ -271,9 +279,11 @@ def streaming_classifier(
     event_history = np.array([False]*hyp_event_history)
     primed = True
 
+    
+    ### Start stream ###
+    
     for k in range(0,int(N_loops)):
         
-        # Simulate stream
         if live:
             data = read_arduino(wav_array,inputBufferSize)
             data_temp = process_data(data)
@@ -300,50 +310,36 @@ def streaming_classifier(
                 if (k > N_loops_calibration):
                     st_range = hyp_calibration_statistic_function(data_cal)
                     hyp_event_threshold = st_range*hyp_event_smart_threshold_factor
-                    with open("./print.txt", "a") as file:
-                        file.write(str(hyp_event_threshold)+',')
+                    # with open("./print.txt", "a") as file:
+                    #     file.write(str(hyp_event_threshold)+',')
                     calibrate = False
                 continue
-                
 
 
         ### CLASSIFIER ###
         
-        ## EVENT DETECTION ##
-
+        # Event Detection
         interval = data_plot[hyp_detection_buffer_start_ind:-hyp_detection_buffer_end_ind] # Take middle part of window
-
-
-    #     test_stat = np.sum(interval[0:-1] * interval[1::] <= 0) # Calculate test stat (zero crossings) 
         test_stat = hyp_test_statistic_function(interval) # Calculate test stat (defaults to range) 
-        # test_stat = test_stat/(len(interval)/samprate) # convert to crossings per second
-
-
         is_event = (test_stat > hyp_event_threshold) # Test threshold
 
-        ## KEEP HISTORY ##
-
+        # Record History
         event_history[1::] = event_history[0:-1]
         event_history[0] = is_event
 
 
-        ## Classification
-
+        # Pass window to classifier
         if np.all(event_history[0:hyp_consecutive_triggers]) and primed:
-            if nn is not None:
-                prediction = classify_event(data_plot, nn, samprate)
-            else:
-                prediction = classify_event(data_plot, samprate)
             
+            prediction = classifier(data_plot, samprate)
+            predictions += prediction
             
             print(f"CONGRATULATIONS, ITS AN {prediction}!") if verbose else None
 
             if store_events:
                 predictions_storage.append(data_plot)
-                
-            predictions += prediction
             
-            
+            # Record time interval of event
             end_time = round(k*inputBufferSize/samprate, 2)
             start_time = round(end_time - window_size, 2)
             predictions_timestamps.append((start_time, end_time))
@@ -351,7 +347,6 @@ def streaming_classifier(
             timer = hyp_timeout
 
             primed = False
-        
         
         if not timeout:
             if np.all(~event_history[0:hyp_consecutive_reset]):
@@ -362,7 +357,7 @@ def streaming_classifier(
                 primed = True
 
 
-        ## PLOT ###
+        ## PLOT ##
 
         if plot:
             t = (min(k+1,N_loops_over_window))*inputBufferSize/samprate*np.linspace(0,1,(data_plot).size)
