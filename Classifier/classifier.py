@@ -91,47 +91,29 @@ def three_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window
 #Classifies only using the first hump of the wave.
 from numba import njit
 
+@njit
+def consecutive(data, stepsize=0):        #returns a list of sub-arrays, grouped by the same consecutive value (in this case they are groups of consecutive 1s or -1s)                       
+    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
+
 @njit #numba 'decorator' that performs just-in-time (jit) compilation
-def zeroes_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, ave_height = 350):
+def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec_seconds = 0.2):
     arr_ds = arr[0::downsample_rate]
-    arr_sign = np.sign(arr_ds)
-
-    consec_neg = 0 #number of consecutive samples that are below x-axis
-    consec_pos = 0 #number of consecutive samples that are above x-axis
+    arr_sign = np.sign(arr_ds)            #returns array of -1s and 1s, depending on if the number was negative or positive respectively
     i = 0
-    while i < len(arr_sign):
-        if consec_neg == 0 and consec_pos == 0:
-            if arr_sign[i] == 1:
-                consec_pos += 1
-            if arr_sign[i] == -1:
-                consec_neg += 1
-        if consec_neg > 0:
-            if arr_sign[i] == 1:
-                consec_neg = 0
-                consec_pos = 1
-            elif arr_sign[i] == -1:
-                consec_neg += 1
-                consec_pos = 0
-            elif arr_sign[i] == 0:
-                consec_neg, consec_pos = 0, 0
-        if consec_pos > 0:
-            if arr_sign[i] == -1:
-                consec_pos = 0
-                consec_neg = 1
-            elif arr_sign[i] == 1:
-                consec_pos += 1
-                consec_neg = 0
-            elif arr_sign[i] == 0:
-                consec_neg, consec_pos = 0, 0
-
-        if consec_neg > 200:
-            if (np.sum(arr_ds[i - 200: i]) / 200) < -1 * ave_height:
-                return 'L'          
-        if consec_pos > 200:
-            if (np.sum(arr_ds[i - 200: i]) / 200) > ave_height:
+    #means = []
+    split_arrays = consecutive(arr_sign)  #returns a list of sub-arrays, grouped by the same consecutive value (in this case they are groups of consecutive 1s or -1s)
+    for sub_arr in split_arrays:
+        if len(sub_arr) > consec_seconds * samprate / downsample_rate:          #RHS converts seconds to number of samples
+            #means.append(np.mean(arr_ds[i:(i + len(sub_arr) - 1)])) 
+           
+            # #if there were 'consec_seconds' seconds of no zero-crossings, then check if the average height is bigger than 'ave_height'
+            if np.mean(arr_ds[i:(i + len(sub_arr) - 1)]) > ave_height:          
                 return 'R'
-        i += 1
-    return '_'
+            elif np.mean(arr_ds[i:(i + len(sub_arr) - 1)]) < -1 * ave_height:
+                return 'L'
+        i += len(sub_arr)
+    #print(means)
+    return '_'                            #unable to classify because there were not 'consec_seconds' seconds of no zero-crossings
 
 def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
