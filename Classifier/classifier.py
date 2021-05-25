@@ -2,12 +2,10 @@
 from scipy import signal
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 from Classifier.load_data import read_arduino, process_data, read_arduinbro
-
-
-
 
 
 
@@ -135,7 +133,7 @@ def zeroes_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3
         i += 1
     return '_'
 
-def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10, height_threshold=50):
+def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
     
     fs = samprate/downsample_rate
@@ -144,31 +142,60 @@ def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_s
 
     # Smooth wave
     window_length = int(window_size_seconds*samprate/downsample_rate + 1)
-    
-    #start = time.time()
     filtered_arr = signal.savgol_filter(arr_ds, window_length, 1)
-    #end = time.time()
-    #print("Sav-Gol took:", end - start, "seconds")
-
 
     # Indices of positive maxima
     max_locs = np.array(signal.argrelextrema(filtered_arr, np.greater)[0])
     max_vals = filtered_arr[max_locs]
-    max_locs = max_locs[max_vals > height_threshold]
+    max_locs = max_locs[max_vals > 0]
     
     # Indices of negative minima
     min_locs = np.array(signal.argrelextrema(filtered_arr, np.less)[0])
     min_vals = filtered_arr[min_locs]
-    min_locs = min_locs[min_vals < -height_threshold]
-    #print(len(max_locs), " ", len(min_locs))
-    if len(max_locs) == 0 or len(max_locs) == 0:
-        return "_"
-    if max_locs[0] < min_locs[0]:
-        return "R"
-    elif min_locs[0] < max_locs[0]:
-        return "L"
+    min_locs = min_locs[min_vals < 0]
     
-    return "_"
+    # Appended indices
+    max_min_locs = np.append(max_locs, min_locs)
+
+    
+    # Values of above indices
+    max_min_values = filtered_arr[max_min_locs]
+    
+    # Absolute value of those values
+    abs_max_min_values = np.abs(max_min_values)
+    
+    # A vector with a length equal to the number of minimums: all '-1' to say minimum
+    numMin = [-1]*len(min_locs)
+    # A vector with a length equal to the number of maximums: all '1' to say maximum
+    numMax = [1]*len(max_locs)
+    
+    # Vector same size as max_min_values with first half being maximums and second half being minimums
+    isMin = np.append(numMax, numMin)
+    
+    # Stack the three vectors
+    val_and_idx = np.vstack([abs_max_min_values, max_min_locs, isMin])
+    
+    # Sort the magnitudes of the extrema in descending order (-1 indicates descending)
+    val_and_idx_sorted = val_and_idx[ :, (-1*val_and_idx[0]).argsort()]
+    
+    with open("print.txt", "w") as file:
+        file.write(str(val_and_idx_sorted.shape))
+
+    if val_and_idx_sorted.shape == (3, 0):
+        if val_and_idx_sorted[2] == -1:
+            return 'L'
+        elif val_and_idx_sorted[2] == 1:
+            return 'R'
+        else:
+            return "_"
+    else:
+        if val_and_idx_sorted[2, 0] == -1:
+            return 'L'
+        elif val_and_idx_sorted[2, 0] == 1:
+            return 'R'
+        else:
+            return "_"
+        
 
 
 # catch22 kNN classifier (using stepwise selected features)
