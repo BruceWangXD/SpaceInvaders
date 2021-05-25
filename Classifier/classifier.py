@@ -3,7 +3,7 @@ from scipy import signal
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
+import time
 
 from Classifier.load_data import read_arduino, process_data, read_arduinbro
 
@@ -160,8 +160,10 @@ def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_s
     # Sort the magnitudes of the extrema in descending order (-1 indicates descending)
     val_and_idx_sorted = val_and_idx[ :, (-1*val_and_idx[0]).argsort()]
     
+    """                 # idk why but this chunk broke something after adding code that clears the classifier_optimisation.csv file
     with open("print.txt", "w") as file:
         file.write(str(val_and_idx_sorted.shape))
+    """
 
     if val_and_idx_sorted.shape == (3, 0):
         if val_and_idx_sorted[2] == -1:
@@ -222,6 +224,11 @@ def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
     classifier = three_pronged_smoothing_classifier, 
+    using_zeroes_classifier = False,            
+    plot_zeroes_classifier = False,                # Plot the waves that took an unusually long time for the zeroes classifier
+    use_smart_hyp_zeroes_height_threshold = False,      # Whether or not you use the smart threshold as the height threshold for the zeroes classifier
+    zeroes_height_threshold = 10,                  # Only used if using_zeroes_classifier is true
+    zeroes_consec_threshold = 0.2,                 # Only used if using_zeroes_classifier is true
     window_size = 1.5, # Total detection window [s]
     N_loops_over_window = 15, # implicitly defines buffer to be 1/x of the window
     hyp_detection_buffer_end = 0.3, # seconds - how much time to shave off end of the window in order to define the middle portion
@@ -237,6 +244,8 @@ def streaming_classifier(
     total_time = None,  # max time. If none, it goes forever!
     plot = False, # Whether to plot the livestream data
     store_events = False, # Whether to return the classification window array for debugging purposes
+    store_times = False,        # Store time taken for each classification
+    nil_classifier = False,     # Does not classify, just gives L as its prediction always. Used for time complexity purposes.
     verbose=False, # lol
     live = False, # Whether we're live
     timeout = False):
@@ -290,7 +299,7 @@ def streaming_classifier(
 
     
     ### Start stream ###
-    
+    classification_times = []
     for k in range(0,int(N_loops)):
         
         if live:
@@ -339,8 +348,51 @@ def streaming_classifier(
 
         # Pass window to classifier
         if np.all(event_history[0:hyp_consecutive_triggers]) and primed:
-            
-            prediction = classifier(data_plot, samprate)
+            if store_times:
+                if nil_classifier:
+                    start = time.time_ns()
+                    prediction = 'L'
+                    end = time.time_ns()
+                    time_taken = end - start
+                    classification_times.append(time_taken)
+                else:
+                    if using_zeroes_classifier:
+                        if use_smart_hyp_zeroes_height_threshold:
+                            start = time.time_ns()
+                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = hyp_event_threshold)
+                            end = time.time_ns()
+                            time_taken = end - start
+                            classification_times.append(time_taken)
+                            if plot_zeroes_classifier and time_taken > 998800: 
+                                plt.figure()
+                                plt.plot(data_plot)
+
+                        else:
+                            start = time.time_ns()
+                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = zeroes_height_threshold)
+                            end = time.time_ns()
+                            time_taken = end - start
+                            classification_times.append(time_taken)
+                            if plot_zeroes_classifier and time_taken > 998800: 
+                                plt.figure()
+                                plt.plot(data_plot)
+                    else:
+                        start = time.time_ns()
+                        prediction = classifier(data_plot, samprate)
+                        end = time.time_ns()
+                        time_taken = end - start
+                        classification_times.append(time_taken)
+            else:
+                if nil_classifier:
+                    prediction = 'L'
+                else:
+                    if using_zeroes_classifier:
+                        if use_smart_hyp_height_threshold:
+                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = hyp_event_threshold)
+                        else:
+                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = zeroes_height_threshold)
+                    else:
+                        prediction = classifier(data_plot, samprate)
             predictions += prediction
             
             print(f"CONGRATULATIONS, ITS AN {prediction}!") if verbose else None
@@ -383,8 +435,12 @@ def streaming_classifier(
             fig.canvas.draw()    
             plt.show()
     
-    if store_events:
+    if store_events and store_times:
+        return predictions, predictions_timestamps, predictions_storage, classification_times
+    elif store_events:
         return predictions, predictions_timestamps, predictions_storage
+    elif store_times:
+        return predictions, predictions_timestamps, classification_times
     else:
         return predictions, predictions_timestamps
 
