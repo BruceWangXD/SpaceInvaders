@@ -100,11 +100,9 @@ def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec
     arr_ds = arr[0::downsample_rate]
     arr_sign = np.sign(arr_ds)            #returns array of -1s and 1s, depending on if the number was negative or positive respectively
     i = 0
-    #means = []
     split_arrays = consecutive(arr_sign)  #returns a list of sub-arrays, grouped by the same consecutive value (in this case they are groups of consecutive 1s or -1s)
     for sub_arr in split_arrays:
         if len(sub_arr) > consec_seconds * samprate / downsample_rate:          #RHS converts seconds to number of samples
-            #means.append(np.mean(arr_ds[i:(i + len(sub_arr) - 1)])) 
            
             # #if there were 'consec_seconds' seconds of no zero-crossings, then check if the average height is bigger than 'ave_height'
             if np.mean(arr_ds[i:(i + len(sub_arr) - 1)]) > ave_height:          
@@ -112,7 +110,6 @@ def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec
             elif np.mean(arr_ds[i:(i + len(sub_arr) - 1)]) < -1 * ave_height:
                 return 'L'
         i += len(sub_arr)
-    #print(means)
     return '_'                            #unable to classify because there were not 'consec_seconds' seconds of no zero-crossings
 
 def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
@@ -373,7 +370,7 @@ def streaming_classifier(
                             end = time.time_ns()
                             time_taken = end - start
                             classification_times.append(time_taken)
-                            if plot_zeroes_classifier and time_taken > 998800: 
+                            if plot_zeroes_classifier and time_taken > 50000: 
                                 plt.figure()
                                 plt.plot(data_plot)
                     else:
@@ -387,7 +384,7 @@ def streaming_classifier(
                     prediction = 'L'
                 else:
                     if using_zeroes_classifier:
-                        if use_smart_hyp_height_threshold:
+                        if use_smart_hyp_zeroes_height_threshold:
                             prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = hyp_event_threshold)
                         else:
                             prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = zeroes_height_threshold)
