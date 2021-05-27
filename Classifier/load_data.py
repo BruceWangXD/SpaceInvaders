@@ -45,7 +45,8 @@ def read_arduinbro(wav_array, inputBufferSize, k):
 
 def load_training_data(path = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Datasets/Good Data - Sandeep no errors/",
                        scale_factor= 512/(2**13 - 1),
-                       blacklist = ["blink", "different", "fast", "slow", "eyebrow"]):
+                       blacklist = ["blink", "different", "fast", "slow", "eyebrow"],
+                       whitelist = ["right", "left"]):
 
 
     files = os.listdir(path)
@@ -55,8 +56,8 @@ def load_training_data(path = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/D
 
     for file in files:
         filters = [x not in file.lower() for x in blacklist]
-        if (("right" in file.lower() or "left" in file.lower()) and 
-            np.all(np.array(filters))):
+        filters.extend([x in file.lower() for x in whitelist])
+        if np.all(np.array(filters)):
             if file[-4::] == ".wav":
                 samprate, wav_array = wavfile.read(path+file)
 
