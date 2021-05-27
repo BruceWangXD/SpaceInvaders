@@ -304,15 +304,11 @@ def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
     classifier = three_pronged_smoothing_classifier, 
-    using_zeroes_classifier = False,            
-    plot_zeroes_classifier = False,                # Plot the waves that took an unusually long time for the zeroes classifier
-    use_smart_hyp_zeroes_height_threshold = False,      # Whether or not you use the smart threshold as the height threshold for the zeroes classifier
-    zeroes_height_threshold = 10,                  # Only used if using_zeroes_classifier is true
-    zeroes_consec_threshold = 0.2,                 # Only used if using_zeroes_classifier is true
     window_size = 1.5, # Total detection window [s]
     N_loops_over_window = 15, # implicitly defines buffer to be 1/x of the window
     hyp_detection_buffer_end = 0.3, # seconds - how much time to shave off end of the window in order to define the middle portion
     hyp_detection_buffer_start = 0.7, # seconds - how much time to shave off start of the window in order to define the middle portion
+    hyp_event_threshold = 20,
     hyp_event_smart_threshold_window = 5, # The length of the calibration period to define the threshold
     hyp_calibration_statistic_function = lambda x: np.max(x) - np.min(x), # Function that calculates the calibration statistic
     hyp_test_statistic_function = lambda x: np.max(x) - np.min(x), # Function that calculates the test statistic
@@ -321,6 +317,15 @@ def streaming_classifier(
     hyp_consecutive_triggers = 3, # How many threshold triggers need to occur in a row for an event to be called
     hyp_consecutive_reset = 1, # How many threshold failures need to occur in a row for the classifier to be primed for a new event
     hyp_timeout = 10,
+    
+    # Zeros Classifier Parameters
+    using_zeroes_classifier = False,            
+    plot_zeroes_classifier = False,                # Plot the waves that took an unusually long time for the zeroes classifier
+    use_smart_hyp_zeroes_height_threshold = False,      # Whether or not you use the smart threshold as the height threshold for the zeroes classifier
+    zeroes_height_threshold = 10,                  # Only used if using_zeroes_classifier is true
+    zeroes_consec_threshold = 0.2,                 # Only used if using_zeroes_classifier is true
+    
+    dumb_threshold = False,
     total_time = None,  # max time. If none, it goes forever!
     plot = False, # Whether to plot the livestream data
     store_events = False, # Whether to return the classification window array for debugging purposes
@@ -328,7 +333,8 @@ def streaming_classifier(
     nil_classifier = False,     # Does not classify, just gives L as its prediction always. Used for time complexity purposes.
     verbose=False, # lol
     live = False, # Whether we're live
-    timeout = False):
+    timeout = False,
+    flip_threshold = False):
     
     
     ### Initialisation ###
@@ -350,6 +356,10 @@ def streaming_classifier(
     N_loops =(total_time*samprate)//inputBufferSize  # len(wav_array)//inputBufferSize 
     T_acquire = inputBufferSize/samprate    # length of time that data is acquired for 
     N_loops_over_window = window_size/T_acquire    # total number of loops to cover desire time window
+    
+    if timeout:
+        timer = hyp_timeout
+        
 
 
     # Initialise plot
@@ -407,7 +417,10 @@ def streaming_classifier(
 
                 if (k > N_loops_calibration):
                     st_range = hyp_calibration_statistic_function(data_cal)
-                    hyp_event_threshold = st_range*hyp_event_smart_threshold_factor
+                    
+                    
+                    if not dumb_threshold:
+                        hyp_event_threshold = st_range*hyp_event_smart_threshold_factor
                     # with open("./print.txt", "a") as file:
                     #     file.write(str(hyp_event_threshold)+',')
                     calibrate = False
@@ -419,7 +432,11 @@ def streaming_classifier(
         # Event Detection
         interval = data_plot[hyp_detection_buffer_start_ind:-hyp_detection_buffer_end_ind] # Take middle part of window
         test_stat = hyp_test_statistic_function(interval) # Calculate test stat (defaults to range) 
-        is_event = (test_stat > hyp_event_threshold) # Test threshold
+        
+        if flip_threshold:
+            is_event = (test_stat < hyp_event_threshold) # Test threshold
+        else:
+            is_event = (test_stat > hyp_event_threshold) # Test threshold
 
         # Record History
         event_history[1::] = event_history[0:-1]
