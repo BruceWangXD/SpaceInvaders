@@ -101,12 +101,12 @@ class Ship(sprite.Sprite):
             print('lllll')
             
 
-        if classified_event=='B' and self.rect.x < 740-110:
+        if classified_event=='R' and self.rect.x < 740-110:
             self.rect.x += 60
             print('rrrrr')
 
 
-        if classified_event=='B' and self.rect > 740-110:
+        if classified_event=='R' and self.rect.x > 740-110:
             self.rect.x=10+20
             print('rrrrrr')
                 
@@ -792,7 +792,7 @@ if __name__ == '__main__':
     
     # prepare to stream data
     baudrate = 230400
-    cport = "/dev/cu.usbserial-DJ00E1PF"  # set the correct port before run it
+    cport = "/dev/cu.usbserial-DJ00E328"  # set the correct port before run it
     ser = serial.Serial(port=cport, baudrate=baudrate)
     inputBufferSize = 8000  # keep betweein 2000-20000
     ser.timeout = inputBufferSize / 20000.0  # set read timeout, 20000 is one second
