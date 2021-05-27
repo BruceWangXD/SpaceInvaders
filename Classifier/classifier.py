@@ -85,6 +85,89 @@ def three_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window
         return 'R'
     else:
         return "_"
+    
+    
+    
+    
+def two_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
+    arr_ds = arr[0::downsample_rate]
+    
+    fs = samprate/downsample_rate
+    dt = 1/fs
+    t = np.arange(0, (len(arr_ds)*dt), dt)
+
+    # Smooth wave
+    window_length = int(window_size_seconds*samprate/downsample_rate + 1)
+    filtered_arr = signal.savgol_filter(arr_ds, window_length, 1)
+
+    # Indices of positive maxima
+    max_locs = np.array(signal.argrelextrema(filtered_arr, np.greater)[0])
+    max_vals = filtered_arr[max_locs]
+    max_locs = max_locs[max_vals > 0]
+    
+    # Indices of negative minima
+    min_locs = np.array(signal.argrelextrema(filtered_arr, np.less)[0])
+    min_vals = filtered_arr[min_locs]
+    min_locs = min_locs[min_vals < 0]
+    
+    # Appended indices
+    max_min_locs = np.append(max_locs, min_locs)
+    
+    # Values of above indices
+    max_min_values = filtered_arr[max_min_locs]
+    
+    # Absolute value of those values
+    abs_max_min_values = np.abs(max_min_values)
+    
+    # A vector with a length equal to the number of minimums: all '-1' to say minimum
+    numMin = [-1]*len(min_locs)
+    # A vector with a length equal to the number of maximums: all '1' to say maximum
+    numMax = [1]*len(max_locs)
+    
+    # Vector same size as max_min_values with first half being maximums and second half being minimums
+    isMin = np.append(numMax, numMin)
+    
+    # Stack the three vectors
+    val_and_idx = np.vstack([abs_max_min_values, max_min_locs, isMin])
+    
+    # Sort the magnitudes of the extrema in descending order (-1 indicates descending)
+    val_and_idx_sorted = val_and_idx[ :, (-1*val_and_idx[0]).argsort()]
+
+    classificationFound = False
+    
+    # We will continue looping until we have an appropriate classification. This relies on having the extrema INTERCHANGE between max and min (no two min right next to eachother)
+    loops = 0
+    while not classificationFound and loops < max_loops:
+        
+        # Take the top three magnitudes
+        top_2 = val_and_idx_sorted[:, 0:2]
+        
+        # Sort according to the indices of those values
+        top_2_sorted = top_2[ :, top_2[1].argsort()]
+        
+        # Break if we run out of turning points
+        if top_2_sorted.shape != (3, 2):
+            return "_"
+        
+        # If two min or two max occur one after the other, we know we have an inappropriate result so we delete one of those doubled min/max
+        if top_2_sorted[2, 0]*top_2_sorted[2, 1] > 0:
+            val_and_idx_sorted = np.delete(val_and_idx_sorted, 1, 1)
+        else:
+            classificationFound = True
+        
+        loops += 1
+    
+    if top_2_sorted[2, 0] == -1:
+        return 'L'
+    elif top_2_sorted[2, 0] == 1:
+        return 'R'
+    else:
+        return "_"
+    
+    
+    
+    
+    
 
 #ZEROES CLASSIFIER:
 #Looks for x samples (after downsampling) that are consecutively positive / negative.
