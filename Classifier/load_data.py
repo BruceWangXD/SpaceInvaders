@@ -62,6 +62,9 @@ def load_training_data(path = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/D
                 samprate, wav_array = wavfile.read(path+file)
 
                 wav_array = wav_array*scale_factor
+                
+                # Centre at y=0:
+                wav_array -= 512
 
 
                 waves[file[:-4]] = wav_array
