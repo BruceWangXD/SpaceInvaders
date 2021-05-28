@@ -71,10 +71,13 @@ def LR_detection(wave_list, count=0, event=0, amplitude=800, limit=2000, length=
         #         event=1
         #         event_string+='L'
 
-
-        elif wave_list[i] < (0 - amplitude) and event == 0:
+            #change_change
+        elif event == 0 and wave_list[i]<-800:# < (0 - amplitude) :
             event = 2
             event_string += "R"
+            ######3##
+        # else:
+        #     event_string+='R'
 
         if event != 0:
             event_table.append(event)
@@ -202,7 +205,7 @@ def LR_detection(wave_list, count=0, event=0, amplitude=800, limit=2000, length=
 
 def main():
     baudrate = 230400
-    cport = "/dev/cu.usbserial-DJ00E33Q"  # set the correct port before run it
+    cport = "/dev/cu.usbserial-DJ00E328"  # set the correct port before run it
     ser = serial.Serial(port=cport, baudrate=baudrate)
 
     inputBufferSize = 9000  # keep betweein 2000-20000
@@ -234,9 +237,9 @@ def main():
         data = read_arduino(ser, inputBufferSize)
         data_temp = process_data(data)
 
-        mean = sum(data_temp) / len(data_temp)
-        variance = sum([((x - mean) ** 2) for x in data_temp]) / len(data_temp)
-        sd = variance ** 0.5
+        # mean = sum(data_temp) / len(data_temp)
+        # variance = sum([((x - mean) ** 2) for x in data_temp]) / len(data_temp)
+        # sd = variance ** 0.5
         
         
         # print(sd)
@@ -244,18 +247,18 @@ def main():
 
 
 #gai
-        if sd > sd_threshold:
-            predicted = eye_detection(data_temp)
-            print(predicted)
+        # if sd > sd_threshold:
+        #     predicted = eye_detection(data_temp)
+        #     print(predicted)
 
         # detect=LR_detection(data_temp,length=len(data_temp))
 
         
         
         
-        # detect = LR_detection(data_temp, length=len(data_temp))[1]
-        # if len(detect) > 0:
-        #     print(detect)
+        detect = LR_detection(data_temp, length=len(data_temp))[1]
+        if len(detect) > 0:
+            print(detect)
 
 
 if __name__ == '__main__':

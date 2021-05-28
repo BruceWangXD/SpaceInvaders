@@ -69,6 +69,8 @@ ENEMY_DEFAULT_POSITION = 65  # Initial value for a new game
 ENEMY_MOVE_DOWN = 35
 
 
+global primed
+primed=True
 
 
 
@@ -133,12 +135,20 @@ class Ship(sprite.Sprite):
             
         ###########
         ###########
-        # data=latest.read_arduino(ser,inputBufferSize)
-        # data_temp=latest.process_data(data)
+        data=latest.read_arduino(ser,inputBufferSize)
+        data_temp=latest.process_data(data)
 
+        samprate=80000
+
+        primed=True
+        is_event = latest.detect_event(data_temp)
+        if is_event and primed:
+            print('event')
+            
+        classified_event=  latest.three_pronged_smoothing_classifier(data_temp,samprate)
+        print(classified_event)
         
-        
-        classified_event=  latest.streaming_classifier(ser,samprate=20000)
+        # classified_event=  latest.streaming_classifier(data_temp,samprate)
 
         if classified_event=='L' and self.rect.x > 10+120 :
             self.rect.x -= 60
@@ -158,6 +168,13 @@ class Ship(sprite.Sprite):
         if classified_event=='R' and self.rect.x > 740-110:
             self.rect.x=10+20
             print('rrrrrr')
+        #     primed = False
+        # else:
+        #    primed = True
+
+
+        
+        
 
 
 
@@ -201,7 +218,7 @@ class Ship(sprite.Sprite):
         #     self.rect.x -= self.speed
         # if keys[K_RIGHT] and self.rect.x < 740:
         #     self.rect.x += self.speed
-        # game.screen.blit(self.image, self.rect)
+        game.screen.blit(self.image, self.rect)
         
 
         
@@ -867,11 +884,11 @@ if __name__ == '__main__':
     #cport = '/dev/tty.usbmodem141101'  # set the correct port before run it
     ser = serial.Serial(port=cport, baudrate=baudrate)    
     # take example data
-    inputBufferSize = 10000 # 20000 = 1 second
+    inputBufferSize = 8000 # 20000 = 1 second
     ser.timeout = inputBufferSize/20000.0  # set read timeout
 
-
-
+    # global primed
+    # primed = True
     
     
     global game
