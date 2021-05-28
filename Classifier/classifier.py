@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 import time
 
+
+import os
+from Classifier.message import create_msg
 from Classifier.load_data import read_arduino, process_data, read_arduinbro
 
 
@@ -338,7 +341,11 @@ def streaming_classifier(
     
     
     ### Initialisation ###
-    
+    IPC_FIFO_NAME = "hello_ipc"
+
+    fifo = os.open(IPC_FIFO_NAME, os.O_WRONLY)
+
+
     if total_time is None:
         try:
             total_time = len(wav_array)/samprate
@@ -490,6 +497,10 @@ def streaming_classifier(
                             prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = zeroes_height_threshold)
                     else:
                         prediction = classifier(data_plot, samprate)
+            
+            msg = create_msg(prediction)
+            os.write(fifo, msg)
+            
             predictions += prediction
             
             print(f"CONGRATULATIONS, ITS AN {prediction}!") if verbose else None
@@ -532,6 +543,8 @@ def streaming_classifier(
             fig.canvas.draw()    
             plt.show()
     
+    os.close(fifo)
+
     if store_events and store_times:
         return predictions, predictions_timestamps, predictions_storage, classification_times
     elif store_events:
