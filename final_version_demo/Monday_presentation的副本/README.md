@@ -45,9 +45,3 @@ python spaceinvaders.py
 - [AI research project where four types of agents control the ship and play the game](https://github.com/scott-pickthorn/Space_Invaders)
 - [NEAT program that evolves to beat the game](https://github.com/lairsonm/neat-in-space-invaders)
 
-## Contact
-
-Thanks for checking out my game and I hope you enjoy it! Feel free to contact me.
-
-- Lee Robinson
-- lrobinson2011@gmail.com
