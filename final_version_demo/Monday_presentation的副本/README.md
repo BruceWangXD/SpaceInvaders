@@ -17,22 +17,34 @@ the alien invasion is successful and the game ends. A special "mystery ship" wil
 screen and award bonus points if destroyed. The ship is partially protected by several stationary defense bunkers that are
 gradually destroyed by projectiles from the aliens and player.
 
+Here a living streaming classifier can collect left or right signals that given by the player, and tank will move right or left correspondingly. 
+Tank keeps shooting as long as it is not behind a barrier.
+
 <img src="http://i.imgur.com/u2mss8o.png" width="300" height="240" />
 <img src="http://i.imgur.com/mR81p5O.png" width="300" height="240"/>
 
 ## How To Play
 
 - If you don't have [Python](https://www.python.org/downloads/) or [Pygame](http://www.pygame.org/download.shtml) installed, you can simply double click the .exe file to play the game.
-  **Note:** _The .exe file needs to stay in the same directory as the sounds, images, and font folders._
+  **Note:** _The .exe file needs to stay in the same directory as the sounds, images, and font folders.
 
 - If you have the correct version of Python and Pygame installed, you can run the program in the command prompt / terminal.
 
+- You need to make sure that your brain box is correctly connected and power it on. 
+
+
+
 ```bash
-cd SpaceInvaders
-python spaceinvaders.py
+
+python optimization.py
+
+
+python sandeep.py
 ```
 
-**Note:** If you're using Python 3, replace the command "python" with "python3"
+
+
+**Note:** If you're using Python 3, replace the command "python" with "python3". And you must run optimization.py before sandeep.py. 
 
 **MacOS Mojave**: You need to use Python 3.7.2 or greater: [Source](https://github.com/pygame/pygame/issues/555)
 
@@ -40,14 +52,5 @@ python spaceinvaders.py
 
 [![Space Invaders](http://img.youtube.com/vi/_2yUP3WMDRc/0.jpg)](http://www.youtube.com/watch?v=_2yUP3WMDRc)
 
-## Notable Forks
 
-- [AI research project where four types of agents control the ship and play the game](https://github.com/scott-pickthorn/Space_Invaders)
-- [NEAT program that evolves to beat the game](https://github.com/lairsonm/neat-in-space-invaders)
 
-## Contact
-
-Thanks for checking out my game and I hope you enjoy it! Feel free to contact me.
-
-- Lee Robinson
-- lrobinson2011@gmail.com
