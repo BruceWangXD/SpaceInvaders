@@ -40,8 +40,3 @@ python spaceinvaders.py
 
 [![Space Invaders](http://img.youtube.com/vi/_2yUP3WMDRc/0.jpg)](http://www.youtube.com/watch?v=_2yUP3WMDRc)
 
-## Notable Forks
-
-- [AI research project where four types of agents control the ship and play the game](https://github.com/scott-pickthorn/Space_Invaders)
-- [NEAT program that evolves to beat the game](https://github.com/lairsonm/neat-in-space-invaders)
-
