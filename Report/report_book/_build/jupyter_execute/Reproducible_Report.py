@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# <h1>Table of Contents<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#Executive-Summary" data-toc-modified-id="Executive-Summary-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Executive Summary</a></span><ul class="toc-item"><li><span><a href="#Dependencies" data-toc-modified-id="Dependencies-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Dependencies</a></span></li></ul></li><li><span><a href="#Introduction" data-toc-modified-id="Introduction-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Introduction</a></span></li><li><span><a href="#Motivation" data-toc-modified-id="Motivation-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Motivation</a></span></li><li><span><a href="#Experimental-Design" data-toc-modified-id="Experimental-Design-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Experimental Design</a></span><ul class="toc-item"><li><span><a href="#Data-Collection" data-toc-modified-id="Data-Collection-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Data Collection</a></span></li><li><span><a href="#Streaming-Algorithm-Design" data-toc-modified-id="Streaming-Algorithm-Design-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Streaming Algorithm Design</a></span></li></ul></li><li><span><a href="#Optimisation" data-toc-modified-id="Optimisation-5"><span class="toc-item-num">5&nbsp;&nbsp;</span>Optimisation</a></span><ul class="toc-item"><li><span><a href="#Event-Detection" data-toc-modified-id="Event-Detection-5.1"><span class="toc-item-num">5.1&nbsp;&nbsp;</span>Event Detection</a></span><ul class="toc-item"><li><span><a href="#Test-Statistic" data-toc-modified-id="Test-Statistic-5.1.1"><span class="toc-item-num">5.1.1&nbsp;&nbsp;</span>Test Statistic</a></span></li><li><span><a href="#Evaluation-Metric-(Contrast)" data-toc-modified-id="Evaluation-Metric-(Contrast)-5.1.2"><span class="toc-item-num">5.1.2&nbsp;&nbsp;</span>Evaluation Metric (Contrast)</a></span></li><li><span><a href="#Threshold-Optimisation" data-toc-modified-id="Threshold-Optimisation-5.1.3"><span class="toc-item-num">5.1.3&nbsp;&nbsp;</span>Threshold Optimisation</a></span></li></ul></li><li><span><a href="#Classification" data-toc-modified-id="Classification-5.2"><span class="toc-item-num">5.2&nbsp;&nbsp;</span>Classification</a></span><ul class="toc-item"><li><span><a href="#Classifiers" data-toc-modified-id="Classifiers-5.2.1"><span class="toc-item-num">5.2.1&nbsp;&nbsp;</span>Classifiers</a></span></li><li><span><a href="#Accuracy-Metric" data-toc-modified-id="Accuracy-Metric-5.2.2"><span class="toc-item-num">5.2.2&nbsp;&nbsp;</span>Accuracy Metric</a></span></li><li><span><a href="#Classifier-Optimisation" data-toc-modified-id="Classifier-Optimisation-5.2.3"><span class="toc-item-num">5.2.3&nbsp;&nbsp;</span>Classifier Optimisation</a></span></li></ul></li></ul></li><li><span><a href="#Evaluation" data-toc-modified-id="Evaluation-6"><span class="toc-item-num">6&nbsp;&nbsp;</span>Evaluation</a></span></li><li><span><a href="#Space-Invaders!" data-toc-modified-id="Space-Invaders!-7"><span class="toc-item-num">7&nbsp;&nbsp;</span>Space Invaders!</a></span></li><li><span><a href="#Appendix" data-toc-modified-id="Appendix-8"><span class="toc-item-num">8&nbsp;&nbsp;</span>Appendix</a></span></li><li><span><a href="#References" data-toc-modified-id="References-9"><span class="toc-item-num">9&nbsp;&nbsp;</span>References</a></span></li></ul></div>
-
 # # Making Space Invaders Fun and Accessible with Brain-Computer Interfacing
 
 # ## Executive Summary
@@ -31,16 +28,16 @@ import struct
 
 
 # Disables plots. Comment out this line to show plots generated from code.
-get_ipython().run_line_magic('matplotlib', 'agg')
+# %matplotlib agg
 
 # Set seed for reproducibility
-np.random.seed(420)
+np.random.seed(420) 
 # Path to outputs folder
-OUT_PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/report_outputs/"
+OUT_PATH = "/Users/stephanie/Desktop/Aqua10/Report/report_outputs/"
 # Path to data
-IN_PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Datasets/data/"
+IN_PATH = "/Users/stephanie/Desktop/Aqua10/Datasets/data/"
 # Path to other file dependencies
-DEP_PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/requirements/other_files/"
+DEP_PATH = "/Users/stephanie/Desktop/Aqua10/Report/requirements/other_files/"
 
 
 # ## Introduction
@@ -101,7 +98,7 @@ samprate = 10_000
 # Next, we convert the singular timestamps in the labels dataframe to the time interval of the entire event. There was a minor data quality issue with some of the timestamps which caused some files to have slightly shifted timestamps. To fix this, we went through and manually defined the interval for each file (the time to add before and after the timestamp to get the desired interval). We did this once to encompass the entire wave signal, and another time to only cover the first hump of the signal.
 # 
 
-# In[3]:
+# In[10]:
 
 
 # First hump
@@ -129,71 +126,15 @@ time_buffers_whole = {
 }
 
 
-# In[4]:
-
-
-def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibration_seconds = 5, 
-                       before_buffer = 1, after_buffer = 1, shade_alpha=0.2, wave_alpha=1, 
-                       ymin = -512, ymax = 512):
-    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate
-    
-    # Calibration period
-    calibration_bool = time_seq < calibration_seconds
-
-    # Get locations of events
-    left_events_bool = np.array([False]*len(time_seq))
-    for time in labels_dat.time[labels_dat.label == "L"]:
-        left_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | left_events_bool
-    right_events_bool = np.array([False]*len(time_seq))
-    for time in labels_dat.time[labels_dat.label == "R"]:
-        right_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | right_events_bool
-
-    # Plot wave with events
-    ax[i].plot(time_seq, wav_array, alpha=wave_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = left_events_bool,
-                     color = 'g',
-                     label = "Left",
-                     alpha=shade_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = right_events_bool,
-                     color = 'r',
-                     label = "Right",
-                     alpha=shade_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = calibration_bool,
-                     color = 'y',
-                     label = "Calibration",
-                     alpha=shade_alpha)
-    ax[i].set_title(title)
-    
-
-fig, ax = plt.subplots(8, 1)
-fig.set_size_inches(16, 10)
-for i, key in enumerate(sorted(waves.keys())):
-    plot_labelled_wave(
-        waves[key], samprate, labels[key], ax, i, title=key, before_buffer = time_buffers_whole[key][0],
-        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
-    )
-for i, key in enumerate(sorted(test_waves.keys())):
-    plot_labelled_wave(
-        test_waves[key], samprate, test_labels[key], ax, i+6, title=key, before_buffer = time_buffers_whole[key][0],
-        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
-    )
-ax[0].legend()
-fig.tight_layout()
-fig.savefig(OUT_PATH + "dataset_plot.png")
-
-
-# ```{figure} ../report_outputs/dataset_plot.png
+# ```{figure} ../report_outputs/flow.png
 # ---
 # scale: 50%
-# name: dataset
+# name: flow
 # ---
-# Visualisation of the entire dataset.
+# Flowy.
 # ```
 
-# {numref}`dataset`
+# {numref}`flow`
 
 # ### Streaming Algorithm Design
 # 
@@ -207,7 +148,7 @@ fig.savefig(OUT_PATH + "dataset_plot.png")
 # 
 # 
 
-# In[5]:
+# In[ ]:
 
 
 # Function that reads in the kth <inputBufferSize> sized segment of the array
@@ -220,7 +161,7 @@ def read_arduinbro(wav_array, inputBufferSize, k):
     return np.flip(data)
 
 
-# In[6]:
+# In[ ]:
 
 
 def streaming_classifier(
@@ -391,7 +332,7 @@ def streaming_classifier(
 # 
 # The first component to optimising event detection is to choose the best test statistic to be applied over the detection window. To do this, we first define 5 possible candidates for the test statistic. These candidates were chosen because they were deemed likely to be effective in distinguishing events from non-events. 
 
-# In[7]:
+# In[ ]:
 
 
 # Define Test Stat Functions
@@ -413,7 +354,7 @@ def ts_zero_crossings(x):
     return np.sum(x[0:-1]*x[1::] <= 0)
 
 # Fourier transforms can distinguish between events and non-events due to 
-def max_frequency(frame, samprate=10000):
+def ts_max_frequency(frame, samprate=10000):
     fs = samprate
     dt = 1/fs
     t = np.arange(0, (len(frame)*dt), dt)
@@ -445,7 +386,7 @@ tfn_candidates = {"Range": ts_range,
 # $$
 # where $E$ is the set of test statistics calculated over event regions, $E^*$ is the non-event region test statistics, and $\bar{k}$, $\sigma_k$ and $N_k$ are the mean, standard deviation and number of elements in set $k$ respectively.
 
-# In[8]:
+# In[ ]:
 
 
 def contrast(events, non_events): 
@@ -455,7 +396,7 @@ def contrast(events, non_events):
 
 # Next, we perform a gridsearch varying the window length from 0 to 2 seconds and calculating the contrast of each test statistic each window length. Below, we 
 
-# In[9]:
+# In[ ]:
 
 
 def get_event_regions(wav_array, samprate, labels_dat, time_buffer):
@@ -515,7 +456,7 @@ def contrast_all_files(output_filename, window_size, test_stat_fns, samprate,
             file.write(",".join([str(window_size), key]) + "," + ','.join(np.round(cont, 4).astype(str)) + "\n")
 
 
-# In[11]:
+# In[ ]:
 
 
 output_filename_event_det_opt = OUT_PATH + "event_detection_optimisation.csv"
@@ -539,7 +480,7 @@ for i, x in enumerate(np.linspace(100, 10000, granularity)):
     )
 
 
-# In[16]:
+# In[ ]:
 
 
 contrasts = pd.read_csv(output_filename_event_det_opt, header=None)
@@ -566,7 +507,7 @@ plt.savefig(OUT_PATH+"contrast.png")
 
 # #### Threshold Optimisation
 
-# In[12]:
+# In[ ]:
 
 
 calibration_window_sec = 5
@@ -618,7 +559,7 @@ for st_scale in np.linspace(0.01, 1, 100):
     f_score_list.append(fscore)
 
 
-# In[13]:
+# In[ ]:
 
 
 plt.figure(figsize=(7, 7))
@@ -640,7 +581,7 @@ plt.savefig(OUT_PATH+"threshold.png")
 
 # #### Classifiers
 
-# In[14]:
+# In[ ]:
 
 
 # Prepare Classifier Candidates
@@ -843,7 +784,7 @@ def max_min_range_classifier(arr, samprate, downsample_rate=10, rng = 35):
         return "_"
 
 
-# In[15]:
+# In[ ]:
 
 
 # Prepare classifiers for optimisation and plotting
@@ -877,7 +818,7 @@ classifier_colours = {"One-pronged": "tab:blue",
 
 # #### Accuracy Metric
 
-# In[16]:
+# In[ ]:
 
 
 def my_lev_dist(prediction, actual, L_cost = 1.25, R_cost = 1.25, under_score_cost = 0.5):
@@ -891,7 +832,7 @@ def my_lev_dist(prediction, actual, L_cost = 1.25, R_cost = 1.25, under_score_co
 
 # #### Classifier Optimisation
 
-# In[17]:
+# In[ ]:
 
 
 output_filename_cls_opt = OUT_PATH + "classifier_optimisation.csv"
@@ -934,7 +875,7 @@ for classifier_label, classifier in classifiers.items():
                                      key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
 
 
-# In[18]:
+# In[ ]:
 
 
 results = pd.read_csv(output_filename_cls_opt, header=None)
@@ -944,7 +885,7 @@ results_agg.reset_index(inplace=True)
 results_agg
 
 
-# In[19]:
+# In[ ]:
 
 
 optimal_cl_windows = {}
@@ -973,7 +914,7 @@ plt.savefig(OUT_PATH+"classifier.png")
 
 # ## Evaluation
 
-# In[20]:
+# In[ ]:
 
 
 output_filename_tst_res = OUT_PATH + "test_results.csv"
@@ -1008,7 +949,7 @@ for classifier_label, classifier in classifiers.items():
             file.write(",".join([classifier_label, key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
 
 
-# In[21]:
+# In[ ]:
 
 
 test_results = pd.read_csv(output_filename_tst_res, header=None)
@@ -1021,7 +962,7 @@ test_results
 
 # ## Space Invaders!
 
-# In[22]:
+# In[ ]:
 
 
 def encode_msg_size(size: int) -> bytes:
@@ -1037,7 +978,63 @@ def create_msg(content: bytes) -> bytes:
 
 # ## Appendix
 
-# In[23]:
+# In[12]:
+
+
+def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibration_seconds = 5, 
+                       before_buffer = 1, after_buffer = 1, shade_alpha=0.2, wave_alpha=1, 
+                       ymin = -512, ymax = 512):
+    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate
+    
+    # Calibration period
+    calibration_bool = time_seq < calibration_seconds
+
+    # Get locations of events
+    left_events_bool = np.array([False]*len(time_seq))
+    for time in labels_dat.time[labels_dat.label == "L"]:
+        left_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | left_events_bool
+    right_events_bool = np.array([False]*len(time_seq))
+    for time in labels_dat.time[labels_dat.label == "R"]:
+        right_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | right_events_bool
+
+    # Plot wave with events
+    ax[i].plot(time_seq, wav_array, alpha=wave_alpha)
+    ax[i].fill_between(time_seq, ymax, ymin,
+                     where = left_events_bool,
+                     color = 'g',
+                     label = "Left",
+                     alpha=shade_alpha)
+    ax[i].fill_between(time_seq, ymax, ymin,
+                     where = right_events_bool,
+                     color = 'r',
+                     label = "Right",
+                     alpha=shade_alpha)
+    ax[i].fill_between(time_seq, ymax, ymin,
+                     where = calibration_bool,
+                     color = 'y',
+                     label = "Calibration",
+                     alpha=shade_alpha)
+    ax[i].set_title(title)
+    
+
+fig, ax = plt.subplots(8, 1)
+fig.set_size_inches(16, 10)
+for i, key in enumerate(sorted(waves.keys())):
+    plot_labelled_wave(
+        waves[key], samprate, labels[key], ax, i, title=key, before_buffer = time_buffers_whole[key][0],
+        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
+    )
+for i, key in enumerate(sorted(test_waves.keys())):
+    plot_labelled_wave(
+        test_waves[key], samprate, test_labels[key], ax, i+6, title=key, before_buffer = time_buffers_whole[key][0],
+        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
+    )
+ax[0].legend()
+fig.tight_layout()
+fig.savefig(OUT_PATH + "dataset_plot.png")
+
+
+# In[ ]:
 
 
 # Final classifier used for Space Invaders
