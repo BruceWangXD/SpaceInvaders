@@ -12,4 +12,6 @@
     2.4. jupyter nbextension enable toc2/main
 
 3. Run notebook
-    Navigate to 'Reproducible Report.ipynb' in Jupyter and run the notebook.
+    3.1. Navigate to 'Reproducible Report.ipynb' in Jupyter
+    3.2. Change the file paths in the code cell underneath section 1.1 of the report to point to the specified directories
+    3.3. Run the notebook
