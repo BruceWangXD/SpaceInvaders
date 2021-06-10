@@ -1,7 +1,7 @@
 # Steps to run our reproducible report:
 
 1. Install python dependencies:
-    pip install requirements.txt
+    pip install -r requirements.txt
     
 2. Install jupyter notebook dependencies (for readability):
     Instructions are from https://jupyter-contrib-nbextensions.readthedocs.io/en/latest/install.html
