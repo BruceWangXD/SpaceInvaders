@@ -8,6 +8,8 @@ import time
 
 import os
 from Classifier.message import create_msg
+
+
 from Classifier.load_data import read_arduino, process_data, read_arduinbro
 
 
@@ -182,7 +184,7 @@ def consecutive(data, stepsize=0):        #returns a list of sub-arrays, grouped
     return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
 
 @njit #numba 'decorator' that performs just-in-time (jit) compilation
-def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec_seconds = 0.2):
+def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 20, consec_seconds = 0.19):
     arr_ds = arr[0::downsample_rate]
     arr_sign = np.sign(arr_ds)            #returns array of -1s and 1s, depending on if the number was negative or positive respectively
     i = 0
@@ -198,7 +200,42 @@ def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec
         i += len(sub_arr)
     return '_'                            #unable to classify because there were not 'consec_seconds' seconds of no zero-crossings
 
-def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
+def max_min_classifier(arr, samprate, downsample_rate=10):
+    arr_ds = arr[0::downsample_rate]
+    arr_max = np.amax(arr_ds)
+    arr_min = np.amin(arr_ds)
+    max_loc = np.where(arr_ds == arr_max)[0][0]
+    min_loc = np.where(arr_ds == arr_min)[0][0]
+    if max_loc > min_loc:
+        return "R"
+    elif min_loc > max_loc:
+        return "L"
+    else:
+        print("Flat wave!!!!")
+        return "_"
+
+def max_min_range_classifier(arr, samprate, downsample_rate=10, range = 30):
+    arr_ds = arr[0::downsample_rate]
+    arr_max = np.amax(arr_ds)       # maximum height in the array
+    arr_min = np.amin(arr_ds)       # minimum height in the array
+    max_loc = np.where(arr_ds == arr_max)[0][0]  # location (array index) of maximum
+    min_loc = np.where(arr_ds == arr_min)[0][0]  # location (array index) of minimum
+
+    if arr_max > range and arr_min < -1 * range: # if the whole wave shape is present in this window
+        if max_loc > min_loc:                    # if the maximum occurred before the minimum
+            return "R"
+        elif min_loc > max_loc:                  # if the maximum occurred before the minimum
+            return "L"
+        else:
+            return "_"
+    elif arr_max > range:                        # if only the maximum is present in this window
+        return "R"
+    elif arr_min < -1 * range:                   # if only the minimum is present in this window
+        return "L"
+    else:
+        return "_"
+ 
+def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10, range = 2):
     arr_ds = arr[0::downsample_rate]
     
     fs = samprate/downsample_rate
@@ -269,7 +306,7 @@ def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_s
 #arr: the array (the event) to be classified (a numpy array)
 
 #Prep:
-
+"""
 from catch22 import catch22_all
 import catch22
 from sklearn.neighbors import KNeighborsClassifier
@@ -284,7 +321,7 @@ y_labels = catch22_step_training_data.iloc[:,-1]
     
 neigh = KNeighborsClassifier(n_neighbors=5)
 neigh.fit(X_train, y_labels)
-
+"""
 def catch22_knn_classifier(arr, samprate, downsample_rate=10):
     arr_ds = arr[0::downsample_rate]
     arr_list = arr_ds.tolist() # single catch22 feature won't take numpy arrays, only lists or tuples
@@ -306,7 +343,7 @@ def catch22_knn_classifier(arr, samprate, downsample_rate=10):
 def streaming_classifier(
     wav_array, # Either the array from file (or ser if live = True)
     samprate,
-    classifier = three_pronged_smoothing_classifier, 
+    classifier = one_pronged_smoothing_classifier, 
     window_size = 1.5, # Total detection window [s]
     N_loops_over_window = 15, # implicitly defines buffer to be 1/x of the window
     hyp_detection_buffer_end = 0.3, # seconds - how much time to shave off end of the window in order to define the middle portion
@@ -324,10 +361,17 @@ def streaming_classifier(
     # Zeros Classifier Parameters
     using_zeroes_classifier = False,            
     plot_zeroes_classifier = False,                # Plot the waves that took an unusually long time for the zeroes classifier
-    use_smart_hyp_zeroes_height_threshold = False,      # Whether or not you use the smart threshold as the height threshold for the zeroes classifier
+    use_smart_height_threshold_mmr = 1,
+    smart_height_factor = 1,                       # Factor to multiply the smart threshold by to receive a number that can be fed in as the `ave_height`
     zeroes_height_threshold = 10,                  # Only used if using_zeroes_classifier is true
-    zeroes_consec_threshold = 0.2,                 # Only used if using_zeroes_classifier is true
+    zeroes_consec_threshold = 0.19,                 # Only used if using_zeroes_classifier is true
     
+    # Max-Min-Range Classifier Parameters
+    using_max_min_range_classifier = False,
+    max_min_range_threshold = 30,                # Only used if using_max_min_range_classifier is true
+    use_smart_range_threshold_mmr = False,        
+    smart_range_factor = 1,                      # Factor to multiply the smart threshold by to receive a number that can be fed in as the `range`
+
     dumb_threshold = False,
     total_time = None,  # max time. If none, it goes forever!
     plot = False, # Whether to plot the livestream data
@@ -341,10 +385,7 @@ def streaming_classifier(
     
     
     ### Initialisation ###
-    IPC_FIFO_NAME = "hello_ipc"
-
-    fifo = os.open(IPC_FIFO_NAME, os.O_WRONLY)
-
+    
 
     if total_time is None:
         try:
@@ -360,7 +401,7 @@ def streaming_classifier(
     
     # Initialise variables
     inputBufferSize = int(window_size/N_loops_over_window * samprate)
-    N_loops =(total_time*samprate)//inputBufferSize  # len(wav_array)//inputBufferSize 
+    N_loops = (total_time*samprate)//inputBufferSize  # len(wav_array)//inputBufferSize 
     T_acquire = inputBufferSize/samprate    # length of time that data is acquired for 
     N_loops_over_window = window_size/T_acquire    # total number of loops to cover desire time window
     
@@ -452,6 +493,7 @@ def streaming_classifier(
 
         # Pass window to classifier
         if np.all(event_history[0:hyp_consecutive_triggers]) and primed:
+            #print(test_stat)
             if store_times:
                 if nil_classifier:
                     start = time.time_ns()
@@ -461,25 +503,30 @@ def streaming_classifier(
                     classification_times.append(time_taken)
                 else:
                     if using_zeroes_classifier:
-                        if use_smart_hyp_zeroes_height_threshold:
+                        if use_smart_height_threshold_mmr:
                             start = time.time_ns()
-                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = hyp_event_threshold)
+                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = smart_range_factor * hyp_event_threshold)
                             end = time.time_ns()
                             time_taken = end - start
                             classification_times.append(time_taken)
                             if plot_zeroes_classifier and time_taken > 998800: 
                                 plt.figure()
                                 plt.plot(data_plot)
-
                         else:
                             start = time.time_ns()
-                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = zeroes_height_threshold)
+                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = smart_range_factor * smar)
                             end = time.time_ns()
                             time_taken = end - start
                             classification_times.append(time_taken)
-                            if plot_zeroes_classifier and time_taken > 50000: 
-                                plt.figure()
-                                plt.plot(data_plot)
+                            if plot_zeroes_classifier and time_taken > 998800: 
+                                    plt.figure()
+                                    plt.plot(data_plot)
+                    elif using_max_min_range_classifier:
+                        start = time.time_ns()
+                        prediction = classifier(data_plot, samprate, range = smart_range_factor * max_min_range_threshold)
+                        end = time.time_ns()
+                        time_taken = end - start
+                        classification_times.append(time_taken)
                     else:
                         start = time.time_ns()
                         prediction = classifier(data_plot, samprate)
@@ -491,15 +538,14 @@ def streaming_classifier(
                     prediction = 'L'
                 else:
                     if using_zeroes_classifier:
-                        if use_smart_hyp_zeroes_height_threshold:
-                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = hyp_event_threshold)
-                        else:
-                            prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = zeroes_height_threshold)
+                        prediction = classifier(data_plot, samprate, consec_seconds = zeroes_consec_threshold, ave_height = smart_height_factor * hyp_event_threshold)
+                    elif using_max_min_range_classifier:
+                        prediction = classifier(data_plot, samprate, range = smart_range_factor * max_min_range_threshold)
                     else:
                         prediction = classifier(data_plot, samprate)
             
-            msg = create_msg(prediction)
-            os.write(fifo, msg)
+            #msg = create_msg(prediction)
+            #os.write(fifo, msg)
             
             predictions += prediction
             
@@ -543,7 +589,7 @@ def streaming_classifier(
             fig.canvas.draw()    
             plt.show()
     
-    os.close(fifo)
+    #os.close(fifo)
 
     if store_events and store_times:
         return predictions, predictions_timestamps, predictions_storage, classification_times
