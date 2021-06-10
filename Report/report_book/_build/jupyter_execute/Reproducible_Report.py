@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# <h1>Table of Contents<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#Executive-Summary" data-toc-modified-id="Executive-Summary-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Executive Summary</a></span><ul class="toc-item"><li><span><a href="#Dependencies" data-toc-modified-id="Dependencies-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Dependencies</a></span></li></ul></li><li><span><a href="#Introduction" data-toc-modified-id="Introduction-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Introduction</a></span></li><li><span><a href="#Motivation" data-toc-modified-id="Motivation-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Motivation</a></span></li><li><span><a href="#Experimental-Design" data-toc-modified-id="Experimental-Design-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Experimental Design</a></span><ul class="toc-item"><li><span><a href="#Data-Collection" data-toc-modified-id="Data-Collection-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Data Collection</a></span></li><li><span><a href="#Streaming-Algorithm-Design" data-toc-modified-id="Streaming-Algorithm-Design-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Streaming Algorithm Design</a></span></li></ul></li><li><span><a href="#Optimisation" data-toc-modified-id="Optimisation-5"><span class="toc-item-num">5&nbsp;&nbsp;</span>Optimisation</a></span><ul class="toc-item"><li><span><a href="#Event-Detection" data-toc-modified-id="Event-Detection-5.1"><span class="toc-item-num">5.1&nbsp;&nbsp;</span>Event Detection</a></span><ul class="toc-item"><li><span><a href="#Test-Statistic" data-toc-modified-id="Test-Statistic-5.1.1"><span class="toc-item-num">5.1.1&nbsp;&nbsp;</span>Test Statistic</a></span></li><li><span><a href="#Evaluation-Metric-(Contrast)" data-toc-modified-id="Evaluation-Metric-(Contrast)-5.1.2"><span class="toc-item-num">5.1.2&nbsp;&nbsp;</span>Evaluation Metric (Contrast)</a></span></li><li><span><a href="#Threshold-Optimisation" data-toc-modified-id="Threshold-Optimisation-5.1.3"><span class="toc-item-num">5.1.3&nbsp;&nbsp;</span>Threshold Optimisation</a></span></li></ul></li><li><span><a href="#Classification" data-toc-modified-id="Classification-5.2"><span class="toc-item-num">5.2&nbsp;&nbsp;</span>Classification</a></span><ul class="toc-item"><li><span><a href="#Classifiers" data-toc-modified-id="Classifiers-5.2.1"><span class="toc-item-num">5.2.1&nbsp;&nbsp;</span>Classifiers</a></span></li><li><span><a href="#Accuracy-Metric" data-toc-modified-id="Accuracy-Metric-5.2.2"><span class="toc-item-num">5.2.2&nbsp;&nbsp;</span>Accuracy Metric</a></span></li><li><span><a href="#Classifier-Optimisation" data-toc-modified-id="Classifier-Optimisation-5.2.3"><span class="toc-item-num">5.2.3&nbsp;&nbsp;</span>Classifier Optimisation</a></span></li></ul></li></ul></li><li><span><a href="#Evaluation" data-toc-modified-id="Evaluation-6"><span class="toc-item-num">6&nbsp;&nbsp;</span>Evaluation</a></span></li><li><span><a href="#Space-Invaders!" data-toc-modified-id="Space-Invaders!-7"><span class="toc-item-num">7&nbsp;&nbsp;</span>Space Invaders!</a></span></li><li><span><a href="#Appendix" data-toc-modified-id="Appendix-8"><span class="toc-item-num">8&nbsp;&nbsp;</span>Appendix</a></span></li><li><span><a href="#References" data-toc-modified-id="References-9"><span class="toc-item-num">9&nbsp;&nbsp;</span>References</a></span></li></ul></div>
-
 # # Making Space Invaders Fun and Accessible with Brain-Computer Interfacing
 
 # ## Executive Summary
@@ -28,19 +25,25 @@ from sklearn.neighbors import KNeighborsClassifier
 from numba import njit
 from weighted_levenshtein import lev
 import struct
+import warnings
+warnings.filterwarnings('ignore')
 
-
-# Disables plots. Comment out this line to show plots generated from code.
+# Update this to point to the report folder
+PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/"
+# To run all computation, change to True. Otherwise, precomputed files will be loaded instead.
+compute_all = False
+# If running, ensure the following line is commented out. It disables plots for knitting to html purposes. 
 get_ipython().run_line_magic('matplotlib', 'agg')
 
 # Set seed for reproducibility
-np.random.seed(420)
+np.random.seed(420) 
 # Path to outputs folder
-OUT_PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/report_outputs/"
+OUT_PATH = PATH + "report_outputs/"
 # Path to data
-IN_PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Datasets/data/"
+IN_PATH = PATH + "data/"
 # Path to other file dependencies
-DEP_PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/requirements/other_files/"
+DEP_PATH = PATH + "requirements/other_files/"
+
 
 
 # ## Introduction
@@ -129,71 +132,14 @@ time_buffers_whole = {
 }
 
 
-# In[4]:
-
-
-def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibration_seconds = 5, 
-                       before_buffer = 1, after_buffer = 1, shade_alpha=0.2, wave_alpha=1, 
-                       ymin = -512, ymax = 512):
-    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate
-    
-    # Calibration period
-    calibration_bool = time_seq < calibration_seconds
-
-    # Get locations of events
-    left_events_bool = np.array([False]*len(time_seq))
-    for time in labels_dat.time[labels_dat.label == "L"]:
-        left_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | left_events_bool
-    right_events_bool = np.array([False]*len(time_seq))
-    for time in labels_dat.time[labels_dat.label == "R"]:
-        right_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | right_events_bool
-
-    # Plot wave with events
-    ax[i].plot(time_seq, wav_array, alpha=wave_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = left_events_bool,
-                     color = 'g',
-                     label = "Left",
-                     alpha=shade_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = right_events_bool,
-                     color = 'r',
-                     label = "Right",
-                     alpha=shade_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = calibration_bool,
-                     color = 'y',
-                     label = "Calibration",
-                     alpha=shade_alpha)
-    ax[i].set_title(title)
-    
-
-fig, ax = plt.subplots(8, 1)
-fig.set_size_inches(16, 10)
-for i, key in enumerate(sorted(waves.keys())):
-    plot_labelled_wave(
-        waves[key], samprate, labels[key], ax, i, title=key, before_buffer = time_buffers_whole[key][0],
-        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
-    )
-for i, key in enumerate(sorted(test_waves.keys())):
-    plot_labelled_wave(
-        test_waves[key], samprate, test_labels[key], ax, i+6, title=key, before_buffer = time_buffers_whole[key][0],
-        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
-    )
-ax[0].legend()
-fig.tight_layout()
-fig.savefig(OUT_PATH + "dataset_plot.png")
-
-
-# ```{figure} ../report_outputs/dataset_plot.png
+# ```{figure} ../report_outputs/flow.png
 # ---
-# scale: 50%
-# name: dataset
+# scale: 30%
+# name: flow
 # ---
-# Visualisation of the entire dataset.
+# Flowy.
 # ```
-
-# {numref}`dataset`
+# <!-- reference by {numref}`flow` -->
 
 # ### Streaming Algorithm Design
 # 
@@ -207,7 +153,7 @@ fig.savefig(OUT_PATH + "dataset_plot.png")
 # 
 # 
 
-# In[5]:
+# In[4]:
 
 
 # Function that reads in the kth <inputBufferSize> sized segment of the array
@@ -220,7 +166,7 @@ def read_arduinbro(wav_array, inputBufferSize, k):
     return np.flip(data)
 
 
-# In[6]:
+# In[5]:
 
 
 def streaming_classifier(
@@ -391,7 +337,7 @@ def streaming_classifier(
 # 
 # The first component to optimising event detection is to choose the best test statistic to be applied over the detection window. To do this, we first define 5 possible candidates for the test statistic. These candidates were chosen because they were deemed likely to be effective in distinguishing events from non-events. 
 
-# In[7]:
+# In[6]:
 
 
 # Define Test Stat Functions
@@ -408,12 +354,13 @@ def ts_IQR(x):
 def ts_abs_max(x): 
     return np.max(np.abs(x))
 
-# non-events cross the zero line (x-axis) often due to noise, while events have long periods over/under the zero line
+# non-events cross the zero line (x-axis) often due to noise, 
+# while events have long periods over/under the zero line
 def ts_zero_crossings(x):
     return np.sum(x[0:-1]*x[1::] <= 0)
 
 # Fourier transforms can distinguish between events and non-events due to 
-def max_frequency(frame, samprate=10000):
+def ts_max_frequency(frame, samprate=10000):
     fs = samprate
     dt = 1/fs
     t = np.arange(0, (len(frame)*dt), dt)
@@ -440,12 +387,15 @@ tfn_candidates = {"Range": ts_range,
 # #### Evaluation Metric (Contrast)
 # 
 # To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called *contrast*. Essentially, contrast is the absolute value of the Welch's t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined by the following formula:
-# $$
+# ```{math}
+# :label: contrast
 # \textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}
-# $$
+# ```
+# <!-- reference it by {eq}`contrast` -->
 # where $E$ is the set of test statistics calculated over event regions, $E^*$ is the non-event region test statistics, and $\bar{k}$, $\sigma_k$ and $N_k$ are the mean, standard deviation and number of elements in set $k$ respectively.
+# 
 
-# In[8]:
+# In[7]:
 
 
 def contrast(events, non_events): 
@@ -455,7 +405,7 @@ def contrast(events, non_events):
 
 # Next, we perform a gridsearch varying the window length from 0 to 2 seconds and calculating the contrast of each test statistic each window length. Below, we 
 
-# In[9]:
+# In[8]:
 
 
 def get_event_regions(wav_array, samprate, labels_dat, time_buffer):
@@ -515,31 +465,32 @@ def contrast_all_files(output_filename, window_size, test_stat_fns, samprate,
             file.write(",".join([str(window_size), key]) + "," + ','.join(np.round(cont, 4).astype(str)) + "\n")
 
 
-# In[11]:
+# In[9]:
 
 
 output_filename_event_det_opt = OUT_PATH + "event_detection_optimisation.csv"
 
-granularity = 100
-open(output_filename_event_det_opt, 'w').close()    # Clears the file so that the code can be run again.
-for i, x in enumerate(np.linspace(100, 10000, granularity)):
-    x = int(x)
-    if i%10 == 0:
-        print(f"{i} of {granularity})
-    contrast_all_files(
-        output_filename_event_det_opt, 
-        window_size = x, 
-        test_stat_fns = tfn_candidates.values(),
-        samprate = samprate,
-        waves = waves,
-        labels = labels,
-        step = 0.1,
-        contrast_fn = contrast,
-        time_buffers = time_buffers_whole
-    )
+if compute_all:
+    granularity = 100
+    open(output_filename_event_det_opt, 'w').close()    # Clears the file so that the code can be run again.
+    for i, x in enumerate(np.linspace(100, 10000, granularity)):
+        x = int(x)
+        if i%10 == 0:
+            print(f"{i} of {granularity}")
+        contrast_all_files(
+            output_filename_event_det_opt, 
+            window_size = x, 
+            test_stat_fns = tfn_candidates.values(),
+            samprate = samprate,
+            waves = waves,
+            labels = labels,
+            step = 0.1,
+            contrast_fn = contrast,
+            time_buffers = time_buffers_whole
+        )
 
 
-# In[16]:
+# In[10]:
 
 
 contrasts = pd.read_csv(output_filename_event_det_opt, header=None)
@@ -553,7 +504,7 @@ for stat in tfn_candidates.keys():
              label = f"{stat} Contrast", alpha = 1)
 
 plt.title("Event Region Contrast vs. Detection Window")
-plt.xlabel("Window Length (s)")    
+plt.xlabel("Detection Window Length (s)")    
 plt.ylabel("Contrast (t Test Statistic)")  
 opt_det_window = contrasts_total.index[np.argmax(np.abs(contrasts_total["Zero Crossings"]))]/samprate
 opt_det_window_val = np.max(np.abs(contrasts_total["Zero Crossings"]))
@@ -564,68 +515,83 @@ plt.legend(loc="upper right")
 plt.savefig(OUT_PATH+"contrast.png")
 
 
+# ```{figure} ../report_outputs/contrast.png
+# ---
+# scale: 75%
+# name: contrast
+# ---
+# Contrast of each test statistic as a function of window size. We can see that zero crossings produces the maximum contrast at a window length of 0.35 seconds.
+# ```
+# <!-- reference by {numref}`contrast` -->
+
 # #### Threshold Optimisation
+
+# In[11]:
+
+
+output_filename_thresh_opt = OUT_PATH + "threshold_optimisation.csv"
+
+if compute_all:
+    open(output_filename_thresh_opt, "w").close() # Clear file
+    calibration_window_sec = 5
+    for st_scale in np.linspace(0.01, 1, 100):
+        fps, fns, tps, i = 0, 0, 0, 0
+        for key in waves.keys():
+            predictions, predictions_timestamps = streaming_classifier(
+                waves[key],
+                samprate,
+                lambda x,y: "R" if np.random.rand()<0.5 else "L",
+                input_buffer_size_sec = 0.05,
+                classification_window_size_sec = opt_det_window,
+                detection_window_size_sec = opt_det_window,
+                detection_window_offset_sec = 0,
+                calibration_window_size_sec = 5,
+                calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                event_threshold_factor = st_scale, 
+                flip_threshold = True, 
+                consecutive_event_triggers = 3, 
+                consecutive_nonevent_reset = 10 
+            )
+            before_buffer = time_buffers_hump[key][0]
+            after_buffer = time_buffers_hump[key][1]
+            actual_times = [(time-before_buffer, time+after_buffer) for time in labels[key].time]
+            actual_leftovers = deepcopy(actual_times)
+            pred_leftovers = deepcopy(predictions_timestamps)
+            tps += len(actual_times)
+            for act_times in actual_times:
+                if act_times[1] < calibration_window_sec:
+                    actual_leftovers.remove(act_times)
+                    continue
+                for pred_times in predictions_timestamps:
+                    if (act_times[0] < pred_times[1] and act_times[1] > pred_times[0] and
+                        pred_times in pred_leftovers and act_times in actual_leftovers):
+                        actual_leftovers.remove(act_times)
+                        pred_leftovers.remove(pred_times)
+            tps -= len(actual_leftovers)
+            fns += len(actual_leftovers)
+            fps += len(pred_leftovers)
+            i += 1
+        fscore = tps/(tps+0.5*(fns+fps))
+        if (st_scale*100)%10 == 0:
+            print(st_scale, fscore)
+        with open(output_filename_thresh_opt, "a") as file:
+            file.write(f"{st_scale},{fscore}\n")
+
 
 # In[12]:
 
 
-calibration_window_sec = 5
+thresholds = pd.read_csv(output_filename_thresh_opt, header=None)
+thresholds.columns = ["threshold_factor", "f_score"] 
 
-st_list = []
-f_score_list = []
-for st_scale in np.linspace(0.01, 1, 100):
-    fps, fns, tps, i = 0, 0, 0, 0
-    for key in waves.keys():
-        predictions, predictions_timestamps = streaming_classifier(
-            waves[key],
-            samprate,
-            lambda x,y: "R" if np.random.rand()<0.5 else "L",
-            input_buffer_size_sec = 0.05,
-            classification_window_size_sec = opt_det_window,
-            detection_window_size_sec = opt_det_window,
-            detection_window_offset_sec = 0,
-            calibration_window_size_sec = 5,
-            calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-            event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-            event_threshold_factor = st_scale, 
-            flip_threshold = True, 
-            consecutive_event_triggers = 3, 
-            consecutive_nonevent_reset = 10 
-        )
-        before_buffer = time_buffers_hump[key][0]
-        after_buffer = time_buffers_hump[key][1]
-        actual_times = [(time-before_buffer, time+after_buffer) for time in labels[key].time]
-        actual_leftovers = deepcopy(actual_times)
-        pred_leftovers = deepcopy(predictions_timestamps)
-        tps += len(actual_times)
-        for act_times in actual_times:
-            if act_times[1] < calibration_window_sec:
-                actual_leftovers.remove(act_times)
-                continue
-            for pred_times in predictions_timestamps:
-                if (act_times[0] < pred_times[1] and act_times[1] > pred_times[0] and
-                    pred_times in pred_leftovers and act_times in actual_leftovers):
-                    actual_leftovers.remove(act_times)
-                    pred_leftovers.remove(pred_times)
-        tps -= len(actual_leftovers)
-        fns += len(actual_leftovers)
-        fps += len(pred_leftovers)
-        i += 1
-    fscore = tps/(tps+0.5*(fns+fps))
-    if (st_scale*100)%10 == 0:
-        print(st_scale, fscore)
-    st_list.append(st_scale)
-    f_score_list.append(fscore)
-
-
-# In[13]:
-
+thresh_factors = thresholds.threshold_factor
+f_score_list = thresholds.f_score
 
 plt.figure(figsize=(7, 7))
-plt.plot(st_list, f_score_list)
+plt.plot(thresh_factors, f_score_list)
 plt.title("F-Score vs. Threshold Factor\n(Zero Crossings Calibration Statistic)")
-st_list = np.array(st_list)
-opt_thresh = np.mean(st_list[f_score_list == np.max(f_score_list)])
+opt_thresh = np.mean(thresh_factors[f_score_list == np.max(f_score_list)])
 opt_fscore = np.max(f_score_list)
 plt.vlines(opt_thresh, 0, opt_fscore, "r", ":", 
            label=f"Optimal Point ({round(opt_thresh, 2)}, {round(opt_fscore, 2)})")
@@ -636,11 +602,20 @@ plt.legend(loc = "lower right")
 plt.savefig(OUT_PATH+"threshold.png")
 
 
+# ```{figure} ../report_outputs/threshold.png
+# ---
+# scale: 75%
+# name: threshold
+# ---
+# Plot of the F score for different threshold factors on the training set. The threshold is obtained by multiplying the zero crossings of the calibration window (normalised by the length of the window) by the threshold factor. We find the highest F score occurs when the threshold factor is 0.27.
+# ```
+# <!-- reference by {numref}`threshold` -->
+
 # ### Classification
 
 # #### Classifiers
 
-# In[14]:
+# In[13]:
 
 
 # Prepare Classifier Candidates
@@ -843,7 +818,7 @@ def max_min_range_classifier(arr, samprate, downsample_rate=10, rng = 35):
         return "_"
 
 
-# In[15]:
+# In[14]:
 
 
 # Prepare classifiers for optimisation and plotting
@@ -853,8 +828,7 @@ classifiers = {"One-pronged": one_pronged_smoothing_classifier,
                "Max-Min-Range": max_min_range_classifier,
                "Zeros": zeroes_classifier,
                "KNN": catch22_knn_classifier,
-               "Naive Random": lambda x,y: "R" if np.random.rand()<0.5 else "L",
-               "Naive Undecided": lambda x,y: "_"}
+               "Naive Random": lambda x,y: "R" if np.random.rand()<0.5 else "L"}
 
 classifier_parameters = {"One-pronged": {},
                "Two-pronged": {},
@@ -862,8 +836,7 @@ classifier_parameters = {"One-pronged": {},
                "Max-Min-Range": {"rng":35},
                "Zeros": {"consec_seconds": 0.2, "ave_height": 0.25},
                "KNN": {},
-               "Naive Random": {},
-               "Naive Undecided": {}}
+               "Naive Random": {}}
 
 classifier_colours = {"One-pronged": "tab:blue",
                "Two-pronged": "tab:cyan",
@@ -871,80 +844,83 @@ classifier_colours = {"One-pronged": "tab:blue",
                "Max-Min-Range": "tab:brown",
                "Zeros": "tab:purple",
                "KNN": "tab:pink",
-               "Naive Random": "tab:red",
-               "Naive Undecided": "tab:orange"}
+               "Naive Random": "tab:red"}
 
 
 # #### Accuracy Metric
 
-# In[16]:
+# In[15]:
 
 
-def my_lev_dist(prediction, actual, L_cost = 1.25, R_cost = 1.25, under_score_cost = 0.5):
+def my_lev_dist(prediction, actual, sub_L_cost = 1.25, sub_R_cost = 1.25,
+                sub_under_score_cost = 0.5, delete_under_score_cost = 0,
+                delete_L_cost = 1.25, delete_R_cost = 1.25):
     substitute_costs = np.ones((128, 128), dtype=np.float64)  
-    substitute_costs[ord('L'), ord('R')] = L_cost
-    substitute_costs[ord('R'), ord('L')] = R_cost
-    substitute_costs[ord('_'), ord('L')] = under_score_cost
-    substitute_costs[ord('_'), ord('R')] = under_score_cost
-    return lev(prediction, actual, substitute_costs = substitute_costs)
+    substitute_costs[ord('L'), ord('R')] = sub_L_cost
+    substitute_costs[ord('R'), ord('L')] = sub_R_cost
+    substitute_costs[ord('_'), ord('L')] = sub_under_score_cost
+    substitute_costs[ord('_'), ord('R')] = sub_under_score_cost
+    delete_costs = np.ones(128, dtype=np.float64)
+    delete_costs[ord('_')] = delete_under_score_cost
+    delete_costs[ord('L')] = delete_L_cost
+    delete_costs[ord('R')] = delete_R_cost
+    return lev(prediction, actual, substitute_costs = substitute_costs, delete_costs = delete_costs)
 
 
 # #### Classifier Optimisation
 
-# In[17]:
+# In[16]:
 
 
 output_filename_cls_opt = OUT_PATH + "classifier_optimisation.csv"
-open(output_filename_cls_opt, 'w').close()    # Clear the file
 
-search_space = (2-opt_det_window)/2
-granularity = 200
+if compute_all:
+    open(output_filename_cls_opt, 'w').close()    # Clear the file
 
-for classifier_label, classifier in classifiers.items():
-    print(classifier_label)
-    for i, w in enumerate(np.linspace(0, search_space, granularity)):
-        w = max(1e-5, w)
-        if i%(granularity//10) == 0:
-            print(f"{i} of {granularity}")
-        classification_window = opt_det_window+2*w
-        buffer_size = 0.05
-        for i, key in enumerate(waves):
-            predictions, predictions_timestamps = streaming_classifier(
-                waves[key],
-                samprate,
-                classifier,
-                classifier_params=classifier_parameters[classifier_label],
-                input_buffer_size_sec = buffer_size,
-                classification_window_size_sec = classification_window,
-                detection_window_size_sec = opt_det_window,
-                detection_window_offset_sec = w,
-                calibration_window_size_sec = 5,
-                calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-                event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-                event_threshold_factor = opt_thresh, 
-                flip_threshold = True, # Threshold is a lower bound, so true
-                consecutive_event_triggers = 3, 
-                consecutive_nonevent_reset = 10 
-            )
-            actuals = "".join(labels[key].label)
-            lev_dist = my_lev_dist(predictions, actuals)
-            acc = max((len(actuals) - lev_dist), 0)/len(actuals)
-            with open(output_filename_cls_opt, "a") as file:
-                file.write(",".join([classifier_label, str(classification_window), 
-                                     key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
+    search_space = (2-opt_det_window)/2
+    granularity = 200
 
+    for classifier_label, classifier in classifiers.items():
+        print(classifier_label)
+        for i, w in enumerate(np.linspace(0, search_space, granularity)):
+            w = max(1e-5, w)
+            if i%(granularity//10) == 0:
+                print(f"{i} of {granularity}")
+            classification_window = opt_det_window+2*w
+            buffer_size = 0.05
+            for i, key in enumerate(waves):
+                predictions, predictions_timestamps = streaming_classifier(
+                    waves[key],
+                    samprate,
+                    classifier,
+                    classifier_params=classifier_parameters[classifier_label],
+                    input_buffer_size_sec = buffer_size,
+                    classification_window_size_sec = classification_window,
+                    detection_window_size_sec = opt_det_window,
+                    detection_window_offset_sec = w,
+                    calibration_window_size_sec = 5,
+                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                    event_threshold_factor = opt_thresh, 
+                    flip_threshold = True, # Threshold is a lower bound, so true
+                    consecutive_event_triggers = 3, 
+                    consecutive_nonevent_reset = 10 
+                )
+                actuals = "".join(labels[key].label)
+                lev_dist = my_lev_dist(predictions, actuals)
+                acc = max((len(actuals) - lev_dist), 0)/len(actuals)
+                with open(output_filename_cls_opt, "a") as file:
+                    file.write(",".join([classifier_label, str(classification_window), 
+                                         key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
 
-# In[18]:
-
-
+                    
 results = pd.read_csv(output_filename_cls_opt, header=None)
 results.columns = ["classifier", "window_size", "file", "predicted", "actual", "lev_dist", "accuracy"]
 results_agg = results.groupby(["window_size", "classifier"]).mean()
 results_agg.reset_index(inplace=True)
-results_agg
 
 
-# In[19]:
+# In[17]:
 
 
 optimal_cl_windows = {}
@@ -958,58 +934,70 @@ for classifier in results.classifier.unique():
     optimal_cl_windows[classifier] = optimal_cl_window
     
     plt.plot(results_agg[filt].window_size, signal.savgol_filter(results_agg[filt].accuracy, 15, 1),
-             label=classifier + f" ({round(optimal_cl_window, 2)},{round(max_val, 2)})", color=classifier_colours[classifier])
-    plt.vlines(optimal_cl_window, 0, max_val, color=classifier_colours[classifier], linestyle=":")
+             label=classifier + f" ({round(optimal_cl_window, 2)},{round(max_val, 2)})", 
+             color=classifier_colours[classifier])
+    plt.vlines(optimal_cl_window, 0, max_val, color=classifier_colours[classifier], linestyle="--", alpha=0.3)
     
 plt.ylabel("Weighted Levenshtein Accuracy")
-plt.xlabel("Window Size (s)")
-plt.title("Classifier Accuracy vs. Window Size")
+plt.xlabel("Classification Window Length (s)")
+plt.title("Classifier Accuracy vs. Classification Window Length")
 plt.ylim(0, 1)
+plt.xlim(0, 2)
+
+plt.fill_between([0, opt_det_window], 0, 1, color="k", alpha = 0.2, label="Detection Window Lowerbound")
+
 
 plt.legend(loc="lower right")
-print(optimal_cl_window, max_val)
 plt.savefig(OUT_PATH+"classifier.png")
 
 
-# ## Evaluation
+# ```{figure} ../report_outputs/classifier.png
+# ---
+# scale: 75%
+# name: classifier
+# ---
+# Training accuracy of each classifier as a function of classification window length. The classification window is lower bounded by the detection window, represented by the shaded region.
+# Ideally, we want to minimise window length while maximising accuracy. With this in mind, we see that the Max-Min-Range classifier has the highest accuracy at a window length equal to be the lowerbound of 0.35 seconds. This makes it the most optimal classifier by both accuracy and latency.
+# ```
+# <!-- reference by {numref}`classifier` -->
 
-# In[20]:
+# #### Evaluation
+
+# In[18]:
 
 
 output_filename_tst_res = OUT_PATH + "test_results.csv"
-open(output_filename_tst_res, 'w').close()    # Clear the file
 
-for classifier_label, classifier in classifiers.items():
-    print(classifier_label)
-    offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
-    buffer_size = 0.05
-    for i, key in enumerate(test_waves):
-        predictions, predictions_timestamps = streaming_classifier(
-            test_waves[key],
-            samprate,
-            classifier,
-            classifier_params=classifier_parameters[classifier_label],
-            input_buffer_size_sec = buffer_size,
-            classification_window_size_sec = optimal_cl_windows[classifier_label],
-            detection_window_size_sec = opt_det_window,
-            detection_window_offset_sec = offset,
-            calibration_window_size_sec = 5,
-            calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-            event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-            event_threshold_factor = opt_thresh, 
-            flip_threshold = True,
-            consecutive_event_triggers = 3, 
-            consecutive_nonevent_reset = 10 
-        )
-        actuals = "".join(test_labels[key].label)
-        lev_dist = my_lev_dist(predictions, actuals)
-        acc = max((len(actuals) - lev_dist), 0)/len(actuals)
-        with open(output_filename_tst_res, "a") as file:
-            file.write(",".join([classifier_label, key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
+if compute_all:
+    open(output_filename_tst_res, 'w').close()    # Clear the file
 
-
-# In[21]:
-
+    for classifier_label, classifier in classifiers.items():
+        print(classifier_label)
+        offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
+        buffer_size = 0.05
+        for i, key in enumerate(test_waves):
+            predictions, predictions_timestamps = streaming_classifier(
+                test_waves[key],
+                samprate,
+                classifier,
+                classifier_params=classifier_parameters[classifier_label],
+                input_buffer_size_sec = buffer_size,
+                classification_window_size_sec = optimal_cl_windows[classifier_label],
+                detection_window_size_sec = opt_det_window,
+                detection_window_offset_sec = offset,
+                calibration_window_size_sec = 5,
+                calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                event_threshold_factor = opt_thresh, 
+                flip_threshold = True,
+                consecutive_event_triggers = 3, 
+                consecutive_nonevent_reset = 10 
+            )
+            actuals = "".join(test_labels[key].label)
+            lev_dist = my_lev_dist(predictions, actuals)
+            acc = max((len(actuals) - lev_dist), 0)/len(actuals)
+            with open(output_filename_tst_res, "a") as file:
+                file.write(",".join([classifier_label, key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
 
 test_results = pd.read_csv(output_filename_tst_res, header=None)
 test_results.columns = ["Classifier", "File", "Predicted", "Actual", "Weighted Levenshtein Distance", "Accuracy"]
@@ -1021,7 +1009,9 @@ test_results
 
 # ## Space Invaders!
 
-# In[22]:
+# ## Appendix
+
+# In[19]:
 
 
 def encode_msg_size(size: int) -> bytes:
@@ -1035,44 +1025,98 @@ def create_msg(content: bytes) -> bytes:
     return encode_msg_size(size) + content
 
 
-# ## Appendix
+# In[20]:
 
-# In[23]:
+
+def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibration_seconds = 5, 
+                       before_buffer = 1, after_buffer = 1, shade_alpha=0.2, wave_alpha=1, 
+                       ymin = -512, ymax = 512):
+    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate
+    
+    # Calibration period
+    calibration_bool = time_seq < calibration_seconds
+
+    # Get locations of events
+    left_events_bool = np.array([False]*len(time_seq))
+    for time in labels_dat.time[labels_dat.label == "L"]:
+        left_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | left_events_bool
+    right_events_bool = np.array([False]*len(time_seq))
+    for time in labels_dat.time[labels_dat.label == "R"]:
+        right_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | right_events_bool
+
+    # Plot wave with events
+    ax[i].plot(time_seq, wav_array, alpha=wave_alpha)
+    ax[i].fill_between(time_seq, ymax, ymin,
+                     where = left_events_bool,
+                     color = 'g',
+                     label = "Left",
+                     alpha=shade_alpha)
+    ax[i].fill_between(time_seq, ymax, ymin,
+                     where = right_events_bool,
+                     color = 'r',
+                     label = "Right",
+                     alpha=shade_alpha)
+    ax[i].fill_between(time_seq, ymax, ymin,
+                     where = calibration_bool,
+                     color = 'y',
+                     label = "Calibration",
+                     alpha=shade_alpha)
+    ax[i].set_title(title)
+    
+
+fig, ax = plt.subplots(8, 1)
+fig.set_size_inches(16, 10)
+for i, key in enumerate(sorted(waves.keys())):
+    plot_labelled_wave(
+        waves[key], samprate, labels[key], ax, i, title=key, before_buffer = time_buffers_whole[key][0],
+        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
+    )
+for i, key in enumerate(sorted(test_waves.keys())):
+    plot_labelled_wave(
+        test_waves[key], samprate, test_labels[key], ax, i+6, title=key, before_buffer = time_buffers_whole[key][0],
+        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
+    )
+ax[0].legend()
+fig.tight_layout()
+fig.savefig(OUT_PATH + "dataset_plot.png")
+
+
+# In[21]:
 
 
 # Final classifier used for Space Invaders
-baudrate = 230400
-cport = "/dev/cu.usbserial-DJ00E33Q"
-ser = serial.Serial(port=cport, baudrate=baudrate)    
-inputBufferSize = 1000   # 20000 = 1 second
-buffer_size_sec = inputBufferSize/20000.0
-ser.timeout = buffer_size_sec  # set read timeout 20000
+# baudrate = 230400
+# cport = "/dev/cu.usbserial-DJ00E33Q"
+# ser = serial.Serial(port=cport, baudrate=baudrate)    
+# inputBufferSize = 1000   # 20000 = 1 second
+# buffer_size_sec = inputBufferSize/20000.0
+# ser.timeout = buffer_size_sec  # set read timeout 20000
 
-classifier_label = "One-pronged"
+# classifier_label = "One-pronged"
 
-print(classifier_label)
-offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
-buffer_size = 0.05
-streaming_classifier(
-    ser,
-    samprate,
-    classifiers[classifier_label],
-    classifier_params=classifier_parameters[classifier_label],
-    input_buffer_size_sec = buffer_size_sec,
-    classification_window_size_sec = optimal_cl_windows[classifier_label],
-    detection_window_size_sec = opt_det_window,
-    detection_window_offset_sec = offset,
-    calibration_window_size_sec = 5,
-    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-    event_threshold_factor = opt_thresh, 
-    flip_threshold = True, 
-    consecutive_event_triggers = 3, 
-    consecutive_nonevent_reset = 10,
-    live = True,
-    FIFO_filename = "space_invaders_ipc",
-    create_FIFO_msg = None,
-    )
+# print(classifier_label)
+# offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
+# buffer_size = 0.05
+# streaming_classifier(
+#     ser,
+#     samprate,
+#     classifiers[classifier_label],
+#     classifier_params=classifier_parameters[classifier_label],
+#     input_buffer_size_sec = buffer_size_sec,
+#     classification_window_size_sec = optimal_cl_windows[classifier_label],
+#     detection_window_size_sec = opt_det_window,
+#     detection_window_offset_sec = offset,
+#     calibration_window_size_sec = 5,
+#     calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+#     event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+#     event_threshold_factor = opt_thresh, 
+#     flip_threshold = True, 
+#     consecutive_event_triggers = 3, 
+#     consecutive_nonevent_reset = 10,
+#     live = True,
+#     FIFO_filename = "space_invaders_ipc",
+#     create_FIFO_msg = None,
+#     )
 
 
 # ## References 
@@ -1083,3 +1127,9 @@ streaming_classifier(
 # ```
 
 # http://blog.juliusschulz.de/blog/ultimate-ipython-notebook
+
+# In[ ]:
+
+
+
+
