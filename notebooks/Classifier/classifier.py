@@ -213,7 +213,8 @@ def max_min_classifier(arr, samprate, downsample_rate=10):
     else:
         print("Flat wave!!!!")
         return "_"
-
+        
+@njit
 def max_min_range_classifier(arr, samprate, downsample_rate=10, range = 30):
     arr_ds = arr[0::downsample_rate]
     arr_max = np.amax(arr_ds)       # maximum height in the array
