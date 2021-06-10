@@ -260,14 +260,14 @@
        Classifier Optimisation
       </a>
      </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#evaluation">
+       Evaluation
+      </a>
+     </li>
     </ul>
    </li>
   </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#evaluation">
-   Evaluation
-  </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#space-invaders">
@@ -324,7 +324,7 @@
 <span class="c1"># Update this to point to the report folder</span>
 <span class="n">PATH</span> <span class="o">=</span> <span class="s2">&quot;/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/&quot;</span>
 <span class="c1"># To run all computation, change to True. Otherwise, precomputed files will be loaded instead.</span>
-<span class="n">compute_all</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">compute_all</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="c1"># If running, ensure the following line is commented out. It disables plots for knitting to html purposes. </span>
 <span class="o">%</span><span class="k">matplotlib</span> agg
 
@@ -335,7 +335,7 @@
 <span class="c1"># Path to data</span>
 <span class="n">IN_PATH</span> <span class="o">=</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;data/&quot;</span>
 <span class="c1"># Path to other file dependencies</span>
-<span class="n">DEP_PATH</span> <span class="o">=</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;other_files/&quot;</span>
+<span class="n">DEP_PATH</span> <span class="o">=</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;requirements/other_files/&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -449,8 +449,7 @@ data7
 <a class="reference internal image-reference" href="_images/flow.png"><img alt="_images/flow.png" src="_images/flow.png" style="width: 1181.5px; height: 1519.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Flowy.</span><a class="headerlink" href="#flow" title="Permalink to this image">¶</a></p>
 </div>
-<p><a class="reference internal" href="#flow"><span class="std std-numref">Fig. 1</span></a></p>
-</div>
+<!-- reference by {numref}`flow` --></div>
 <div class="section" id="streaming-algorithm-design">
 <h3>Streaming Algorithm Design<a class="headerlink" href="#streaming-algorithm-design" title="Permalink to this headline">¶</a></h3>
 <p>First, we must design the basic structure of our streaming algorithm. The algorithm will consist of two parts, the first is event detection, and the second is classification. As the streaming data comes in, we will only keep a window of fixed length in memory, effectively behaving as a sliding window at the front of the stream. This window updates in discrete intervals of some <em>buffer length</em>, and we will deem this window the <em>classification window</em>.</p>
@@ -692,8 +691,9 @@ data7
 <div class="section" id="evaluation-metric-contrast">
 <h4>Evaluation Metric (Contrast)<a class="headerlink" href="#evaluation-metric-contrast" title="Permalink to this headline">¶</a></h4>
 <p>To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called <em>contrast</em>. Essentially, contrast is the absolute value of the Welch’s t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined by the following formula:</p>
-<div class="math notranslate nohighlight" id="equation-my-label">
-<span class="eqno">(1)<a class="headerlink" href="#equation-my-label" title="Permalink to this equation">¶</a></span>\[\textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}\]</div>
+<div class="math notranslate nohighlight" id="equation-contrast">
+<span class="eqno">(1)<a class="headerlink" href="#equation-contrast" title="Permalink to this equation">¶</a></span>\[\textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}\]</div>
+<!-- reference it by {eq}`contrast` -->
 <p>where <span class="math notranslate nohighlight">\(E\)</span> is the set of test statistics calculated over event regions, <span class="math notranslate nohighlight">\(E^*\)</span> is the non-event region test statistics, and <span class="math notranslate nohighlight">\(\bar{k}\)</span>, <span class="math notranslate nohighlight">\(\sigma_k\)</span> and <span class="math notranslate nohighlight">\(N_k\)</span> are the mean, standard deviation and number of elements in set <span class="math notranslate nohighlight">\(k\)</span> respectively.</p>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
@@ -770,31 +770,32 @@ data7
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_filename_event_det_opt</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">+</span> <span class="s2">&quot;event_detection_optimisation.csv&quot;</span>
 
-<span class="n">granularity</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="nb">open</span><span class="p">(</span><span class="n">output_filename_event_det_opt</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    <span class="c1"># Clears the file so that the code can be run again.</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">granularity</span><span class="p">)):</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="k">10</span> == 0:
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">)</span>
-    <span class="n">contrast_all_files</span><span class="p">(</span>
-        <span class="n">output_filename_event_det_opt</span><span class="p">,</span> 
-        <span class="n">window_size</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> 
-        <span class="n">test_stat_fns</span> <span class="o">=</span> <span class="n">tfn_candidates</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
-        <span class="n">samprate</span> <span class="o">=</span> <span class="n">samprate</span><span class="p">,</span>
-        <span class="n">waves</span> <span class="o">=</span> <span class="n">waves</span><span class="p">,</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">,</span>
-        <span class="n">step</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
-        <span class="n">contrast_fn</span> <span class="o">=</span> <span class="n">contrast</span><span class="p">,</span>
-        <span class="n">time_buffers</span> <span class="o">=</span> <span class="n">time_buffers_whole</span>
-    <span class="p">)</span>
+<span class="k">if</span> <span class="n">compute_all</span><span class="p">:</span>
+    <span class="n">granularity</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_event_det_opt</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    <span class="c1"># Clears the file so that the code can be run again.</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">granularity</span><span class="p">)):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="k">10</span> == 0:
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">contrast_all_files</span><span class="p">(</span>
+            <span class="n">output_filename_event_det_opt</span><span class="p">,</span> 
+            <span class="n">window_size</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> 
+            <span class="n">test_stat_fns</span> <span class="o">=</span> <span class="n">tfn_candidates</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
+            <span class="n">samprate</span> <span class="o">=</span> <span class="n">samprate</span><span class="p">,</span>
+            <span class="n">waves</span> <span class="o">=</span> <span class="n">waves</span><span class="p">,</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">,</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+            <span class="n">contrast_fn</span> <span class="o">=</span> <span class="n">contrast</span><span class="p">,</span>
+            <span class="n">time_buffers</span> <span class="o">=</span> <span class="n">time_buffers_whole</span>
+        <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">  File</span><span class="nn"> &quot;&lt;ipython-input-9-e4c685c27f29&gt;&quot;</span><span class="gt">, line </span><span class="mi">8</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">)</span>
-                                 <span class="o">^</span>
-<span class="ne">SyntaxError</span>: EOL while scanning string literal
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0 of 100
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>10 of 100
 </pre></div>
 </div>
 </div>
@@ -812,7 +813,7 @@ data7
              <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stat</span><span class="si">}</span><span class="s2"> Contrast&quot;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Event Region Contrast vs. Detection Window&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Window Length (s)&quot;</span><span class="p">)</span>    
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Detection Window Length (s)&quot;</span><span class="p">)</span>    
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Contrast (t Test Statistic)&quot;</span><span class="p">)</span>  
 <span class="n">opt_det_window</span> <span class="o">=</span> <span class="n">contrasts_total</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">contrasts_total</span><span class="p">[</span><span class="s2">&quot;Zero Crossings&quot;</span><span class="p">]))]</span><span class="o">/</span><span class="n">samprate</span>
 <span class="n">opt_det_window_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">contrasts_total</span><span class="p">[</span><span class="s2">&quot;Zero Crossings&quot;</span><span class="p">]))</span>
@@ -825,69 +826,93 @@ data7
 </div>
 </div>
 </div>
+<div class="figure align-default" id="contrast">
+<a class="reference internal image-reference" href="_images/contrast.png"><img alt="_images/contrast.png" src="_images/contrast.png" style="width: 350.0px; height: 350.0px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 2 </span><span class="caption-text">Contrast of each test statistic as a function of window size. We can see that zero crossings produces the maximum contrast at a window length of 0.35 seconds.</span><a class="headerlink" href="#contrast" title="Permalink to this image">¶</a></p>
 </div>
+<!-- reference by {numref}`contrast` --></div>
 <div class="section" id="threshold-optimisation">
 <h4>Threshold Optimisation<a class="headerlink" href="#threshold-optimisation" title="Permalink to this headline">¶</a></h4>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">calibration_window_sec</span> <span class="o">=</span> <span class="mi">5</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_filename_thresh_opt</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">+</span> <span class="s2">&quot;threshold_optimisation.csv&quot;</span>
 
-<span class="n">st_list</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">f_score_list</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">st_scale</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
-    <span class="n">fps</span><span class="p">,</span> <span class="n">fns</span><span class="p">,</span> <span class="n">tps</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
-            <span class="n">waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-            <span class="n">samprate</span><span class="p">,</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="s2">&quot;R&quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span> <span class="k">else</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span>
-            <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
-            <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
-            <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
-            <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
-            <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
-            <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">st_scale</span><span class="p">,</span> 
-            <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
-            <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
-            <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span> 
-        <span class="p">)</span>
-        <span class="n">before_buffer</span> <span class="o">=</span> <span class="n">time_buffers_hump</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">after_buffer</span> <span class="o">=</span> <span class="n">time_buffers_hump</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">actual_times</span> <span class="o">=</span> <span class="p">[(</span><span class="n">time</span><span class="o">-</span><span class="n">before_buffer</span><span class="p">,</span> <span class="n">time</span><span class="o">+</span><span class="n">after_buffer</span><span class="p">)</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">]</span>
-        <span class="n">actual_leftovers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">actual_times</span><span class="p">)</span>
-        <span class="n">pred_leftovers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">predictions_timestamps</span><span class="p">)</span>
-        <span class="n">tps</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_times</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">act_times</span> <span class="ow">in</span> <span class="n">actual_times</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">act_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">calibration_window_sec</span><span class="p">:</span>
-                <span class="n">actual_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">act_times</span><span class="p">)</span>
-                <span class="k">continue</span>
-            <span class="k">for</span> <span class="n">pred_times</span> <span class="ow">in</span> <span class="n">predictions_timestamps</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">act_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pred_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">act_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">pred_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span>
-                    <span class="n">pred_times</span> <span class="ow">in</span> <span class="n">pred_leftovers</span> <span class="ow">and</span> <span class="n">act_times</span> <span class="ow">in</span> <span class="n">actual_leftovers</span><span class="p">):</span>
+<span class="k">if</span> <span class="n">compute_all</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_thresh_opt</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c1"># Clear file</span>
+    <span class="n">calibration_window_sec</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">for</span> <span class="n">st_scale</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+        <span class="n">fps</span><span class="p">,</span> <span class="n">fns</span><span class="p">,</span> <span class="n">tps</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
+                <span class="n">waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                <span class="n">samprate</span><span class="p">,</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="s2">&quot;R&quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span> <span class="k">else</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span>
+                <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+                <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
+                <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
+                <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
+                <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">st_scale</span><span class="p">,</span> 
+                <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+                <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
+                <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span> 
+            <span class="p">)</span>
+            <span class="n">before_buffer</span> <span class="o">=</span> <span class="n">time_buffers_hump</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">after_buffer</span> <span class="o">=</span> <span class="n">time_buffers_hump</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">actual_times</span> <span class="o">=</span> <span class="p">[(</span><span class="n">time</span><span class="o">-</span><span class="n">before_buffer</span><span class="p">,</span> <span class="n">time</span><span class="o">+</span><span class="n">after_buffer</span><span class="p">)</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">]</span>
+            <span class="n">actual_leftovers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">actual_times</span><span class="p">)</span>
+            <span class="n">pred_leftovers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">predictions_timestamps</span><span class="p">)</span>
+            <span class="n">tps</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_times</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">act_times</span> <span class="ow">in</span> <span class="n">actual_times</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">act_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">calibration_window_sec</span><span class="p">:</span>
                     <span class="n">actual_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">act_times</span><span class="p">)</span>
-                    <span class="n">pred_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pred_times</span><span class="p">)</span>
-        <span class="n">tps</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_leftovers</span><span class="p">)</span>
-        <span class="n">fns</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_leftovers</span><span class="p">)</span>
-        <span class="n">fps</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred_leftovers</span><span class="p">)</span>
-        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">fscore</span> <span class="o">=</span> <span class="n">tps</span><span class="o">/</span><span class="p">(</span><span class="n">tps</span><span class="o">+</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fns</span><span class="o">+</span><span class="n">fps</span><span class="p">))</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">st_scale</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="o">%</span><span class="k">10</span> == 0:
-        <span class="nb">print</span><span class="p">(</span><span class="n">st_scale</span><span class="p">,</span> <span class="n">fscore</span><span class="p">)</span>
-    <span class="n">st_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st_scale</span><span class="p">)</span>
-    <span class="n">f_score_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fscore</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">pred_times</span> <span class="ow">in</span> <span class="n">predictions_timestamps</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">act_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pred_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">act_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">pred_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span>
+                        <span class="n">pred_times</span> <span class="ow">in</span> <span class="n">pred_leftovers</span> <span class="ow">and</span> <span class="n">act_times</span> <span class="ow">in</span> <span class="n">actual_leftovers</span><span class="p">):</span>
+                        <span class="n">actual_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">act_times</span><span class="p">)</span>
+                        <span class="n">pred_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pred_times</span><span class="p">)</span>
+            <span class="n">tps</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_leftovers</span><span class="p">)</span>
+            <span class="n">fns</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_leftovers</span><span class="p">)</span>
+            <span class="n">fps</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred_leftovers</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">fscore</span> <span class="o">=</span> <span class="n">tps</span><span class="o">/</span><span class="p">(</span><span class="n">tps</span><span class="o">+</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fns</span><span class="o">+</span><span class="n">fps</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">st_scale</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="o">%</span><span class="k">10</span> == 0:
+            <span class="nb">print</span><span class="p">(</span><span class="n">st_scale</span><span class="p">,</span> <span class="n">fscore</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_thresh_opt</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">st_scale</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">fscore</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.09999999999999999 0.7596153846153846
+0.2 0.957345971563981
+0.3 0.9859154929577465
+0.4 0.9674418604651163
+0.5 0.9493087557603687
+0.6 0.9483568075117371
+0.7000000000000001 0.9295774647887324
+0.8 0.8909952606635071
+0.9 0.7830188679245284
+1.0 0.5625
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">st_list</span><span class="p">,</span> <span class="n">f_score_list</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">thresholds</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_filename_thresh_opt</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">thresholds</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;threshold_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;f_score&quot;</span><span class="p">]</span> 
+
+<span class="n">thresh_factors</span> <span class="o">=</span> <span class="n">thresholds</span><span class="o">.</span><span class="n">threshold_factor</span>
+<span class="n">f_score_list</span> <span class="o">=</span> <span class="n">thresholds</span><span class="o">.</span><span class="n">f_score</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thresh_factors</span><span class="p">,</span> <span class="n">f_score_list</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;F-Score vs. Threshold Factor</span><span class="se">\n</span><span class="s2">(Zero Crossings Calibration Statistic)&quot;</span><span class="p">)</span>
-<span class="n">st_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">st_list</span><span class="p">)</span>
-<span class="n">opt_thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">st_list</span><span class="p">[</span><span class="n">f_score_list</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">f_score_list</span><span class="p">)])</span>
+<span class="n">opt_thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">thresh_factors</span><span class="p">[</span><span class="n">f_score_list</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">f_score_list</span><span class="p">)])</span>
 <span class="n">opt_fscore</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">f_score_list</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">opt_thresh</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">opt_fscore</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> 
            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Optimal Point (</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">opt_thresh</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">opt_fscore</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
@@ -900,7 +925,11 @@ data7
 </div>
 </div>
 </div>
+<div class="figure align-default" id="threshold">
+<a class="reference internal image-reference" href="_images/threshold.png"><img alt="_images/threshold.png" src="_images/threshold.png" style="width: 350.0px; height: 350.0px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 3 </span><span class="caption-text">Plot of the F score for different threshold factors on the training set. The threshold is obtained by multiplying the zero crossings of the calibration window (normalised by the length of the window) by the threshold factor. We find the highest F score occurs when the threshold factor is 0.27.</span><a class="headerlink" href="#threshold" title="Permalink to this image">¶</a></p>
 </div>
+<!-- reference by {numref}`threshold` --></div>
 </div>
 <div class="section" id="classification">
 <h3>Classification<a class="headerlink" href="#classification" title="Permalink to this headline">¶</a></h3>
@@ -1119,8 +1148,7 @@ data7
                <span class="s2">&quot;Max-Min-Range&quot;</span><span class="p">:</span> <span class="n">max_min_range_classifier</span><span class="p">,</span>
                <span class="s2">&quot;Zeros&quot;</span><span class="p">:</span> <span class="n">zeroes_classifier</span><span class="p">,</span>
                <span class="s2">&quot;KNN&quot;</span><span class="p">:</span> <span class="n">catch22_knn_classifier</span><span class="p">,</span>
-               <span class="s2">&quot;Naive Random&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="s2">&quot;R&quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span> <span class="k">else</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Naive Undecided&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="s2">&quot;_&quot;</span><span class="p">}</span>
+               <span class="s2">&quot;Naive Random&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="s2">&quot;R&quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span> <span class="k">else</span> <span class="s2">&quot;L&quot;</span><span class="p">}</span>
 
 <span class="n">classifier_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;One-pronged&quot;</span><span class="p">:</span> <span class="p">{},</span>
                <span class="s2">&quot;Two-pronged&quot;</span><span class="p">:</span> <span class="p">{},</span>
@@ -1128,8 +1156,7 @@ data7
                <span class="s2">&quot;Max-Min-Range&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;rng&quot;</span><span class="p">:</span><span class="mi">35</span><span class="p">},</span>
                <span class="s2">&quot;Zeros&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;consec_seconds&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s2">&quot;ave_height&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
                <span class="s2">&quot;KNN&quot;</span><span class="p">:</span> <span class="p">{},</span>
-               <span class="s2">&quot;Naive Random&quot;</span><span class="p">:</span> <span class="p">{},</span>
-               <span class="s2">&quot;Naive Undecided&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+               <span class="s2">&quot;Naive Random&quot;</span><span class="p">:</span> <span class="p">{}}</span>
 
 <span class="n">classifier_colours</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;One-pronged&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span>
                <span class="s2">&quot;Two-pronged&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:cyan&quot;</span><span class="p">,</span>
@@ -1137,8 +1164,7 @@ data7
                <span class="s2">&quot;Max-Min-Range&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:brown&quot;</span><span class="p">,</span>
                <span class="s2">&quot;Zeros&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:purple&quot;</span><span class="p">,</span>
                <span class="s2">&quot;KNN&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:pink&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Naive Random&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:red&quot;</span><span class="p">,</span>
-               <span class="s2">&quot;Naive Undecided&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:orange&quot;</span><span class="p">}</span>
+               <span class="s2">&quot;Naive Random&quot;</span><span class="p">:</span> <span class="s2">&quot;tab:red&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -1148,13 +1174,19 @@ data7
 <h4>Accuracy Metric<a class="headerlink" href="#accuracy-metric" title="Permalink to this headline">¶</a></h4>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_lev_dist</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">L_cost</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">,</span> <span class="n">R_cost</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">,</span> <span class="n">under_score_cost</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">):</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_lev_dist</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">sub_L_cost</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">,</span> <span class="n">sub_R_cost</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">,</span>
+                <span class="n">sub_under_score_cost</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">delete_under_score_cost</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">delete_L_cost</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">,</span> <span class="n">delete_R_cost</span> <span class="o">=</span> <span class="mf">1.25</span><span class="p">):</span>
     <span class="n">substitute_costs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>  
-    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">L_cost</span>
-    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">R_cost</span>
-    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">under_score_cost</span>
-    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">under_score_cost</span>
-    <span class="k">return</span> <span class="n">lev</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">substitute_costs</span> <span class="o">=</span> <span class="n">substitute_costs</span><span class="p">)</span>
+    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sub_L_cost</span>
+    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sub_R_cost</span>
+    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sub_under_score_cost</span>
+    <span class="n">substitute_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">),</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">sub_under_score_cost</span>
+    <span class="n">delete_costs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">delete_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">delete_under_score_cost</span>
+    <span class="n">delete_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">delete_L_cost</span>
+    <span class="n">delete_costs</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">delete_R_cost</span>
+    <span class="k">return</span> <span class="n">lev</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">substitute_costs</span> <span class="o">=</span> <span class="n">substitute_costs</span><span class="p">,</span> <span class="n">delete_costs</span> <span class="o">=</span> <span class="n">delete_costs</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1165,54 +1197,132 @@ data7
 <div class="cell tag_hide-input tag_hide-output docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_filename_cls_opt</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">+</span> <span class="s2">&quot;classifier_optimisation.csv&quot;</span>
-<span class="nb">open</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    <span class="c1"># Clear the file</span>
 
-<span class="n">search_space</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="n">opt_det_window</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-<span class="n">granularity</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="k">if</span> <span class="n">compute_all</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    <span class="c1"># Clear the file</span>
 
-<span class="k">for</span> <span class="n">classifier_label</span><span class="p">,</span> <span class="n">classifier</span> <span class="ow">in</span> <span class="n">classifiers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">classifier_label</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">search_space</span><span class="p">,</span> <span class="n">granularity</span><span class="p">)):</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="p">(</span><span class="n">granularity</span><span class="o">//</span><span class="mi">10</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">classification_window</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">w</span>
-        <span class="n">buffer_size</span> <span class="o">=</span> <span class="mf">0.05</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">waves</span><span class="p">):</span>
-            <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
-                <span class="n">waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-                <span class="n">samprate</span><span class="p">,</span>
-                <span class="n">classifier</span><span class="p">,</span>
-                <span class="n">classifier_params</span><span class="o">=</span><span class="n">classifier_parameters</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
-                <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="n">buffer_size</span><span class="p">,</span>
-                <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">classification_window</span><span class="p">,</span>
-                <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
-                <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">w</span><span class="p">,</span>
-                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-                <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
-                <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
-                <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
-                <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="c1"># Threshold is a lower bound, so true</span>
-                <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
-                <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span> 
-            <span class="p">)</span>
-            <span class="n">actuals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-            <span class="n">lev_dist</span> <span class="o">=</span> <span class="n">my_lev_dist</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
-            <span class="n">acc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span> <span class="o">-</span> <span class="n">lev_dist</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">classifier_label</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">classification_window</span><span class="p">),</span> 
-                                     <span class="n">key</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">lev_dist</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">acc</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell tag_hide-input docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">search_space</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="n">opt_det_window</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">granularity</span> <span class="o">=</span> <span class="mi">200</span>
+
+    <span class="k">for</span> <span class="n">classifier_label</span><span class="p">,</span> <span class="n">classifier</span> <span class="ow">in</span> <span class="n">classifiers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">classifier_label</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">search_space</span><span class="p">,</span> <span class="n">granularity</span><span class="p">)):</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="p">(</span><span class="n">granularity</span><span class="o">//</span><span class="mi">10</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">classification_window</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">w</span>
+            <span class="n">buffer_size</span> <span class="o">=</span> <span class="mf">0.05</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">waves</span><span class="p">):</span>
+                <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
+                    <span class="n">waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                    <span class="n">samprate</span><span class="p">,</span>
+                    <span class="n">classifier</span><span class="p">,</span>
+                    <span class="n">classifier_params</span><span class="o">=</span><span class="n">classifier_parameters</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
+                    <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="n">buffer_size</span><span class="p">,</span>
+                    <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">classification_window</span><span class="p">,</span>
+                    <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
+                    <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">w</span><span class="p">,</span>
+                    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                    <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                    <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
+                    <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
+                    <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="c1"># Threshold is a lower bound, so true</span>
+                    <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
+                    <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span> 
+                <span class="p">)</span>
+                <span class="n">actuals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+                <span class="n">lev_dist</span> <span class="o">=</span> <span class="n">my_lev_dist</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+                <span class="n">acc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span> <span class="o">-</span> <span class="n">lev_dist</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">classifier_label</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">classification_window</span><span class="p">),</span> 
+                                         <span class="n">key</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">lev_dist</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">acc</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                    
+<span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="n">results</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span> <span class="s2">&quot;window_size&quot;</span><span class="p">,</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span><span class="p">,</span> <span class="s2">&quot;actual&quot;</span><span class="p">,</span> <span class="s2">&quot;lev_dist&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">]</span>
 <span class="n">results_agg</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;window_size&quot;</span><span class="p">,</span> <span class="s2">&quot;classifier&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="n">results_agg</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">results_agg</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>One-pronged
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
+Two-pronged
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
+Max-Min
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
+Max-Min-Range
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
+Zeros
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
+KNN
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
+Naive Random
+0 of 200
+20 of 200
+40 of 200
+60 of 200
+80 of 200
+100 of 200
+120 of 200
+140 of 200
+160 of 200
+180 of 200
 </pre></div>
 </div>
 </div>
@@ -1226,69 +1336,76 @@ data7
     <span class="n">filt</span> <span class="o">=</span> <span class="n">results_agg</span><span class="o">.</span><span class="n">classifier</span> <span class="o">==</span> <span class="n">classifier</span>
     <span class="n">max_arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">savgol_filter</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">savgol_filter</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">optimal_cl_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">window_size</span><span class="p">)[</span><span class="n">max_arg</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">classifier</span> <span class="o">==</span> <span class="s2">&quot;Max-Min-Range&quot;</span><span class="p">:</span>
+        <span class="n">optimal_cl_window</span> <span class="o">=</span> <span class="n">opt_det_window</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">optimal_cl_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">window_size</span><span class="p">)[</span><span class="n">max_arg</span><span class="p">]</span>
     <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_cl_window</span>
     
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">window_size</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">savgol_filter</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-             <span class="n">label</span><span class="o">=</span><span class="n">classifier</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">optimal_cl_window</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">classifier_colours</span><span class="p">[</span><span class="n">classifier</span><span class="p">])</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">optimal_cl_window</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">classifier_colours</span><span class="p">[</span><span class="n">classifier</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+             <span class="n">label</span><span class="o">=</span><span class="n">classifier</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">optimal_cl_window</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> 
+             <span class="n">color</span><span class="o">=</span><span class="n">classifier_colours</span><span class="p">[</span><span class="n">classifier</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">optimal_cl_window</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">classifier_colours</span><span class="p">[</span><span class="n">classifier</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
     
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Weighted Levenshtein Accuracy&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Window Size (s)&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Classifier Accuracy vs. Window Size&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Classification Window Length (s)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Classifier Accuracy vs. Classification Window Length&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt_det_window</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Detection Window Lowerbound&quot;</span><span class="p">)</span>
+
 
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">optimal_cl_window</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">OUT_PATH</span><span class="o">+</span><span class="s2">&quot;classifier.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
+<div class="figure align-default" id="classifier">
+<a class="reference internal image-reference" href="_images/classifier.png"><img alt="_images/classifier.png" src="_images/classifier.png" style="width: 350.0px; height: 350.0px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 4 </span><span class="caption-text">Training accuracy of each classifier as a function of classification window length. The classification window is lower bounded by the detection window, represented by the shaded region.
+Ideally, we want to minimise window length while maximising accuracy. With this in mind, both One-Pronged and Max-Min-Range classifiers stand out. We see that the Max-Min-Range classifier has consistently high accuracy for all window lengths so we can set its window length to be the lowerbound of 0.35 seconds without compromising accuracy. The One-Pronged peaks at a relatively short window length of 0.62 seconds.</span><a class="headerlink" href="#classifier" title="Permalink to this image">¶</a></p>
 </div>
-</div>
-</div>
+<!-- reference by {numref}`classifier` --></div>
 <div class="section" id="evaluation">
-<h2>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this headline">¶</a></h2>
+<h4>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this headline">¶</a></h4>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_filename_tst_res</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">+</span> <span class="s2">&quot;test_results.csv&quot;</span>
-<span class="nb">open</span><span class="p">(</span><span class="n">output_filename_tst_res</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    <span class="c1"># Clear the file</span>
 
-<span class="k">for</span> <span class="n">classifier_label</span><span class="p">,</span> <span class="n">classifier</span> <span class="ow">in</span> <span class="n">classifiers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">classifier_label</span><span class="p">)</span>
-    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">]</span> <span class="o">-</span> <span class="n">opt_det_window</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-    <span class="n">buffer_size</span> <span class="o">=</span> <span class="mf">0.05</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">test_waves</span><span class="p">):</span>
-        <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
-            <span class="n">test_waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-            <span class="n">samprate</span><span class="p">,</span>
-            <span class="n">classifier</span><span class="p">,</span>
-            <span class="n">classifier_params</span><span class="o">=</span><span class="n">classifier_parameters</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
-            <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="n">buffer_size</span><span class="p">,</span>
-            <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
-            <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
-            <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">offset</span><span class="p">,</span>
-            <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
-            <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
-            <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
-            <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
-            <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span> 
-        <span class="p">)</span>
-        <span class="n">actuals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
-        <span class="n">lev_dist</span> <span class="o">=</span> <span class="n">my_lev_dist</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
-        <span class="n">acc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span> <span class="o">-</span> <span class="n">lev_dist</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_tst_res</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">classifier_label</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">lev_dist</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">acc</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell tag_hide-input docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">test_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_filename_tst_res</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">compute_all</span><span class="p">:</span>
+    <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_tst_res</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>    <span class="c1"># Clear the file</span>
+
+    <span class="k">for</span> <span class="n">classifier_label</span><span class="p">,</span> <span class="n">classifier</span> <span class="ow">in</span> <span class="n">classifiers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">classifier_label</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">]</span> <span class="o">-</span> <span class="n">opt_det_window</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">buffer_size</span> <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">test_waves</span><span class="p">):</span>
+            <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
+                <span class="n">test_waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                <span class="n">samprate</span><span class="p">,</span>
+                <span class="n">classifier</span><span class="p">,</span>
+                <span class="n">classifier_params</span><span class="o">=</span><span class="n">classifier_parameters</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
+                <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="n">buffer_size</span><span class="p">,</span>
+                <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
+                <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
+                <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">offset</span><span class="p">,</span>
+                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
+                <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
+                <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
+                <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span> 
+            <span class="p">)</span>
+            <span class="n">actuals</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">lev_dist</span> <span class="o">=</span> <span class="n">my_lev_dist</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+            <span class="n">acc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span> <span class="o">-</span> <span class="n">lev_dist</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">actuals</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_tst_res</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">classifier_label</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">lev_dist</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">acc</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="n">test_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_filename_tst_res</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="n">test_results</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Classifier&quot;</span><span class="p">,</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span> <span class="s2">&quot;Predicted&quot;</span><span class="p">,</span> <span class="s2">&quot;Actual&quot;</span><span class="p">,</span> <span class="s2">&quot;Weighted Levenshtein Distance&quot;</span><span class="p">,</span> <span class="s2">&quot;Accuracy&quot;</span><span class="p">]</span>
 
 <span class="n">test_results</span> <span class="o">=</span> <span class="n">test_results</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;Classifier&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">&#39;Accuracy&#39;</span><span class="p">)</span>
@@ -1297,10 +1414,96 @@ data7
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>One-pronged
+Two-pronged
+Max-Min
+Max-Min-Range
+Zeros
+KNN
+Naive Random
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Classifier</th>
+      <th>KNN</th>
+      <th>Max-Min</th>
+      <th>Max-Min-Range</th>
+      <th>Naive Random</th>
+      <th>One-pronged</th>
+      <th>Two-pronged</th>
+      <th>Zeros</th>
+    </tr>
+    <tr>
+      <th>File</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>data5</th>
+      <td>0.787037</td>
+      <td>0.925926</td>
+      <td>0.925926</td>
+      <td>0.574074</td>
+      <td>0.925926</td>
+      <td>0.666667</td>
+      <td>0.888889</td>
+    </tr>
+    <tr>
+      <th>data7</th>
+      <td>0.750000</td>
+      <td>0.870968</td>
+      <td>0.870968</td>
+      <td>0.677419</td>
+      <td>0.870968</td>
+      <td>0.596774</td>
+      <td>0.838710</td>
+    </tr>
+    <tr>
+      <th>Total</th>
+      <td>0.768519</td>
+      <td>0.898447</td>
+      <td>0.898447</td>
+      <td>0.625747</td>
+      <td>0.898447</td>
+      <td>0.631720</td>
+      <td>0.863799</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="space-invaders">
 <h2>Space Invaders!<a class="headerlink" href="#space-invaders" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="appendix">
+<h2>Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">¶</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">encode_msg_size</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
@@ -1316,9 +1519,6 @@ data7
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="appendix">
-<h2>Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">¶</a></h2>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_labelled_wave</span><span class="p">(</span><span class="n">wav_array</span><span class="p">,</span> <span class="n">samprate</span><span class="p">,</span> <span class="n">labels_dat</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">calibration_seconds</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> 
@@ -1379,38 +1579,38 @@ data7
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Final classifier used for Space Invaders</span>
-<span class="n">baudrate</span> <span class="o">=</span> <span class="mi">230400</span>
-<span class="n">cport</span> <span class="o">=</span> <span class="s2">&quot;/dev/cu.usbserial-DJ00E33Q&quot;</span>
-<span class="n">ser</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">cport</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="n">baudrate</span><span class="p">)</span>    
-<span class="n">inputBufferSize</span> <span class="o">=</span> <span class="mi">1000</span>   <span class="c1"># 20000 = 1 second</span>
-<span class="n">buffer_size_sec</span> <span class="o">=</span> <span class="n">inputBufferSize</span><span class="o">/</span><span class="mf">20000.0</span>
-<span class="n">ser</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">buffer_size_sec</span>  <span class="c1"># set read timeout 20000</span>
+<span class="c1"># baudrate = 230400</span>
+<span class="c1"># cport = &quot;/dev/cu.usbserial-DJ00E33Q&quot;</span>
+<span class="c1"># ser = serial.Serial(port=cport, baudrate=baudrate)    </span>
+<span class="c1"># inputBufferSize = 1000   # 20000 = 1 second</span>
+<span class="c1"># buffer_size_sec = inputBufferSize/20000.0</span>
+<span class="c1"># ser.timeout = buffer_size_sec  # set read timeout 20000</span>
 
-<span class="n">classifier_label</span> <span class="o">=</span> <span class="s2">&quot;One-pronged&quot;</span>
+<span class="c1"># classifier_label = &quot;One-pronged&quot;</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">classifier_label</span><span class="p">)</span>
-<span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">]</span> <span class="o">-</span> <span class="n">opt_det_window</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
-<span class="n">buffer_size</span> <span class="o">=</span> <span class="mf">0.05</span>
-<span class="n">streaming_classifier</span><span class="p">(</span>
-    <span class="n">ser</span><span class="p">,</span>
-    <span class="n">samprate</span><span class="p">,</span>
-    <span class="n">classifiers</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
-    <span class="n">classifier_params</span><span class="o">=</span><span class="n">classifier_parameters</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
-    <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="n">buffer_size_sec</span><span class="p">,</span>
-    <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
-    <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
-    <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">offset</span><span class="p">,</span>
-    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-    <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
-    <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
-    <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
-    <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
-    <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> 
-    <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-    <span class="n">live</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">FIFO_filename</span> <span class="o">=</span> <span class="s2">&quot;space_invaders_ipc&quot;</span><span class="p">,</span>
-    <span class="n">create_FIFO_msg</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span>
+<span class="c1"># print(classifier_label)</span>
+<span class="c1"># offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2</span>
+<span class="c1"># buffer_size = 0.05</span>
+<span class="c1"># streaming_classifier(</span>
+<span class="c1">#     ser,</span>
+<span class="c1">#     samprate,</span>
+<span class="c1">#     classifiers[classifier_label],</span>
+<span class="c1">#     classifier_params=classifier_parameters[classifier_label],</span>
+<span class="c1">#     input_buffer_size_sec = buffer_size_sec,</span>
+<span class="c1">#     classification_window_size_sec = optimal_cl_windows[classifier_label],</span>
+<span class="c1">#     detection_window_size_sec = opt_det_window,</span>
+<span class="c1">#     detection_window_offset_sec = offset,</span>
+<span class="c1">#     calibration_window_size_sec = 5,</span>
+<span class="c1">#     calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),</span>
+<span class="c1">#     event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), </span>
+<span class="c1">#     event_threshold_factor = opt_thresh, </span>
+<span class="c1">#     flip_threshold = True, </span>
+<span class="c1">#     consecutive_event_triggers = 3, </span>
+<span class="c1">#     consecutive_nonevent_reset = 10,</span>
+<span class="c1">#     live = True,</span>
+<span class="c1">#     FIFO_filename = &quot;space_invaders_ipc&quot;,</span>
+<span class="c1">#     create_FIFO_msg = None,</span>
+<span class="c1">#     )</span>
 </pre></div>
 </div>
 </div>
