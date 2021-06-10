@@ -7,9 +7,10 @@
     Instructions are from https://jupyter-contrib-nbextensions.readthedocs.io/en/latest/install.html
     2.1. pip install jupyter_contrib_nbextensions
     2.2. jupyter contrib nbextension install --user
-    Enable codefolding and table of contents extensions
+    Enable codefolding, table of contents and pythom-markdown extensions
     2.3. jupyter nbextension enable codefolding/main
     2.4. jupyter nbextension enable toc2/main
+    2.5. jupyter nbextension enable python-markdown/main
 
 3. Run notebook
     3.1. Navigate to 'Reproducible Report.ipynb' in Jupyter

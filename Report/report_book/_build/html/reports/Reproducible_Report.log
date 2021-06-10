@@ -17,31 +17,59 @@ Traceback (most recent call last):
     raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
 nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
 ------------------
-output_filename_event_det_opt = OUT_PATH + "event_detection_optimisation.csv"
+# Define Test Stat Functions
 
-granularity = 100
-open(output_filename_event_det_opt, 'w').close()    # Clears the file so that the code can be run again.
-for i, x in enumerate(np.linspace(100, 10000, granularity)):
-    x = int(x)
-    if i%10 == 0:
-        print(f"{i} of {granularity})
-    contrast_all_files(
-        output_filename_event_det_opt, 
-        window_size = x, 
-        test_stat_fns = tfn_candidates.values(),
-        samprate = samprate,
-        waves = waves,
-        labels = labels,
-        step = 0.1,
-        contrast_fn = contrast,
-        time_buffers = time_buffers_whole
-    )
+# due to their sine wave-like shape, events have a larger range than non-events
+def ts_range(x): 
+    return np.max(x) - np.min(x)
+
+# the range but using the middle half of the distribution to reduce influence from outliers
+def ts_IQR(x): 
+    return np.quantile(x, 0.75) - np.quantile(x, 0.25)
+
+# events have high peaks due to their shape compared to non-events
+def ts_abs_max(x): 
+    return np.max(np.abs(x))
+
+# non-events cross the zero line (x-axis) often due to noise, while events have long periods over/under the zero line
+def ts_zero_crossings(x):
+    return np.sum(x[0:-1]*x[1::] <= 0)
+
+# Fourier transforms can distinguish between events and non-events due to 
+def max_frequency(frame, samprate=10000):
+    fs = samprate
+    dt = 1/fs
+    t = np.arange(0, (len(frame)*dt), dt)
+    # Num samples
+    N = len(frame)
+    yf = fft(frame)
+    xf = fftfreq(N, 1/fs)
+    np.size(xf)
+    np.size(t)
+    f, t, Sxx = signal.spectrogram(frame, fs)
+    maximum = np.max(Sxx)
+    threshold = maximum/5;
+    maximum_Freqs = np.amax(Sxx, 0) # max frequency for each time
+    return np.amax(maximum_Freqs)
+
+tfn_candidates = {"Range": ts_range,
+                  "IQR": ts_IQR,
+                  "SD": np.std,
+                  "Absolute Max": ts_abs_max,
+                  "Zero Crossings": ts_zero_crossings,
+                  "Fourier": ts_max_frequency}
+
+
 ------------------
 
-[0;36m  File [0;32m"<ipython-input-10-e4c685c27f29>"[0;36m, line [0;32m8[0m
-[0;31m    print(f"{i} of {granularity})[0m
-[0m                                 ^[0m
-[0;31mSyntaxError[0m[0;31m:[0m EOL while scanning string literal
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNameError[0m                                 Traceback (most recent call last)
+[0;32m<ipython-input-7-1fbbe7e08c74>[0m in [0;36m<module>[0;34m[0m
+[1;32m     39[0m                   [0;34m"Absolute Max"[0m[0;34m:[0m [0mts_abs_max[0m[0;34m,[0m[0;34m[0m[0;34m[0m[0m
+[1;32m     40[0m                   [0;34m"Zero Crossings"[0m[0;34m:[0m [0mts_zero_crossings[0m[0;34m,[0m[0;34m[0m[0;34m[0m[0m
+[0;32m---> 41[0;31m                   "Fourier": ts_max_frequency}
+[0m[1;32m     42[0m [0;34m[0m[0m
 
-SyntaxError: EOL while scanning string literal (<ipython-input-10-e4c685c27f29>, line 8)
+[0;31mNameError[0m: name 'ts_max_frequency' is not defined
+NameError: name 'ts_max_frequency' is not defined
 

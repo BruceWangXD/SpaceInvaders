@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Making Space Invaders Fun and Accessible with Brain-Computer Interfacing
-
 # <h1>Table of Contents<span class="tocSkip"></span></h1>
-# <div class="toc"><ul class="toc-item"><li><span><a href="#Executive-Summary" data-toc-modified-id="Executive-Summary-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Executive Summary</a></span><ul class="toc-item"><li><span><a href="#Dependencies" data-toc-modified-id="Dependencies-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Dependencies</a></span></li></ul></li><li><span><a href="#Introduction" data-toc-modified-id="Introduction-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Introduction</a></span></li><li><span><a href="#Motivation" data-toc-modified-id="Motivation-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Motivation</a></span></li><li><span><a href="#Experimental-Design" data-toc-modified-id="Experimental-Design-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Experimental Design</a></span><ul class="toc-item"><li><span><a href="#Data-Collection" data-toc-modified-id="Data-Collection-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Data Collection</a></span></li><li><span><a href="#Streaming-Algorithm-Design" data-toc-modified-id="Streaming-Algorithm-Design-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Streaming Algorithm Design</a></span></li></ul></li><li><span><a href="#Optimisation" data-toc-modified-id="Optimisation-5"><span class="toc-item-num">5&nbsp;&nbsp;</span>Optimisation</a></span><ul class="toc-item"><li><span><a href="#Event-Detection" data-toc-modified-id="Event-Detection-5.1"><span class="toc-item-num">5.1&nbsp;&nbsp;</span>Event Detection</a></span><ul class="toc-item"><li><span><a href="#Test-Statistic" data-toc-modified-id="Test-Statistic-5.1.1"><span class="toc-item-num">5.1.1&nbsp;&nbsp;</span>Test Statistic</a></span></li><li><span><a href="#Evaluation-Metric-(Contrast)" data-toc-modified-id="Evaluation-Metric-(Contrast)-5.1.2"><span class="toc-item-num">5.1.2&nbsp;&nbsp;</span>Evaluation Metric (Contrast)</a></span></li><li><span><a href="#Threshold-Optimisation" data-toc-modified-id="Threshold-Optimisation-5.1.3"><span class="toc-item-num">5.1.3&nbsp;&nbsp;</span>Threshold Optimisation</a></span></li></ul></li><li><span><a href="#Classification" data-toc-modified-id="Classification-5.2"><span class="toc-item-num">5.2&nbsp;&nbsp;</span>Classification</a></span><ul class="toc-item"><li><span><a href="#Classifiers" data-toc-modified-id="Classifiers-5.2.1"><span class="toc-item-num">5.2.1&nbsp;&nbsp;</span>Classifiers</a></span></li><li><span><a href="#Accuracy-Metric" data-toc-modified-id="Accuracy-Metric-5.2.2"><span class="toc-item-num">5.2.2&nbsp;&nbsp;</span>Accuracy Metric</a></span></li><li><span><a href="#Classifier-Optimisation" data-toc-modified-id="Classifier-Optimisation-5.2.3"><span class="toc-item-num">5.2.3&nbsp;&nbsp;</span>Classifier Optimisation</a></span></li></ul></li></ul></li><li><span><a href="#Evaluation" data-toc-modified-id="Evaluation-6"><span class="toc-item-num">6&nbsp;&nbsp;</span>Evaluation</a></span></li><li><span><a href="#Space-Invaders!" data-toc-modified-id="Space-Invaders!-7"><span class="toc-item-num">7&nbsp;&nbsp;</span>Space Invaders!</a></span></li><li><span><a href="#Appendix" data-toc-modified-id="Appendix-8"><span class="toc-item-num">8&nbsp;&nbsp;</span>Appendix</a></span></li></ul></div>
+# <div class="toc"><ul class="toc-item"><li><span><a href="#Executive-Summary" data-toc-modified-id="Executive-Summary-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Executive Summary</a></span><ul class="toc-item"><li><span><a href="#Dependencies" data-toc-modified-id="Dependencies-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Dependencies</a></span></li></ul></li><li><span><a href="#Introduction" data-toc-modified-id="Introduction-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Introduction</a></span></li><li><span><a href="#Motivation" data-toc-modified-id="Motivation-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Motivation</a></span></li><li><span><a href="#Experimental-Design" data-toc-modified-id="Experimental-Design-4"><span class="toc-item-num">4&nbsp;&nbsp;</span>Experimental Design</a></span><ul class="toc-item"><li><span><a href="#Data-Collection" data-toc-modified-id="Data-Collection-4.1"><span class="toc-item-num">4.1&nbsp;&nbsp;</span>Data Collection</a></span></li><li><span><a href="#Streaming-Algorithm-Design" data-toc-modified-id="Streaming-Algorithm-Design-4.2"><span class="toc-item-num">4.2&nbsp;&nbsp;</span>Streaming Algorithm Design</a></span></li></ul></li><li><span><a href="#Optimisation" data-toc-modified-id="Optimisation-5"><span class="toc-item-num">5&nbsp;&nbsp;</span>Optimisation</a></span><ul class="toc-item"><li><span><a href="#Event-Detection" data-toc-modified-id="Event-Detection-5.1"><span class="toc-item-num">5.1&nbsp;&nbsp;</span>Event Detection</a></span><ul class="toc-item"><li><span><a href="#Test-Statistic" data-toc-modified-id="Test-Statistic-5.1.1"><span class="toc-item-num">5.1.1&nbsp;&nbsp;</span>Test Statistic</a></span></li><li><span><a href="#Evaluation-Metric-(Contrast)" data-toc-modified-id="Evaluation-Metric-(Contrast)-5.1.2"><span class="toc-item-num">5.1.2&nbsp;&nbsp;</span>Evaluation Metric (Contrast)</a></span></li><li><span><a href="#Threshold-Optimisation" data-toc-modified-id="Threshold-Optimisation-5.1.3"><span class="toc-item-num">5.1.3&nbsp;&nbsp;</span>Threshold Optimisation</a></span></li></ul></li><li><span><a href="#Classification" data-toc-modified-id="Classification-5.2"><span class="toc-item-num">5.2&nbsp;&nbsp;</span>Classification</a></span><ul class="toc-item"><li><span><a href="#Classifiers" data-toc-modified-id="Classifiers-5.2.1"><span class="toc-item-num">5.2.1&nbsp;&nbsp;</span>Classifiers</a></span></li><li><span><a href="#Accuracy-Metric" data-toc-modified-id="Accuracy-Metric-5.2.2"><span class="toc-item-num">5.2.2&nbsp;&nbsp;</span>Accuracy Metric</a></span></li><li><span><a href="#Classifier-Optimisation" data-toc-modified-id="Classifier-Optimisation-5.2.3"><span class="toc-item-num">5.2.3&nbsp;&nbsp;</span>Classifier Optimisation</a></span></li></ul></li></ul></li><li><span><a href="#Evaluation" data-toc-modified-id="Evaluation-6"><span class="toc-item-num">6&nbsp;&nbsp;</span>Evaluation</a></span></li><li><span><a href="#Space-Invaders!" data-toc-modified-id="Space-Invaders!-7"><span class="toc-item-num">7&nbsp;&nbsp;</span>Space Invaders!</a></span></li><li><span><a href="#Appendix" data-toc-modified-id="Appendix-8"><span class="toc-item-num">8&nbsp;&nbsp;</span>Appendix</a></span></li><li><span><a href="#References" data-toc-modified-id="References-9"><span class="toc-item-num">9&nbsp;&nbsp;</span>References</a></span></li></ul></div>
+
+# # Making Space Invaders Fun and Accessible with Brain-Computer Interfacing
 
 # ## Executive Summary
 
@@ -28,6 +28,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from numba import njit
 from weighted_levenshtein import lev
 import struct
+
+
+# Disables plots. Comment out this line to show plots generated from code.
+get_ipython().run_line_magic('matplotlib', 'agg')
 
 # Set seed for reproducibility
 np.random.seed(420)
@@ -178,7 +182,18 @@ for i, key in enumerate(sorted(test_waves.keys())):
     )
 ax[0].legend()
 fig.tight_layout()
+fig.savefig(OUT_PATH + "dataset_plot.png")
 
+
+# ```{figure} ../report_outputs/dataset_plot.png
+# ---
+# scale: 50%
+# name: dataset
+# ---
+# Visualisation of the entire dataset.
+# ```
+
+# {numref}`dataset`
 
 # ### Streaming Algorithm Design
 # 
@@ -380,15 +395,25 @@ def streaming_classifier(
 
 
 # Define Test Stat Functions
+
+# due to their sine wave-like shape, events have a larger range than non-events
 def ts_range(x): 
     return np.max(x) - np.min(x)
+
+# the range but using the middle half of the distribution to reduce influence from outliers
 def ts_IQR(x): 
     return np.quantile(x, 0.75) - np.quantile(x, 0.25)
+
+# events have high peaks due to their shape compared to non-events
 def ts_abs_max(x): 
     return np.max(np.abs(x))
+
+# non-events cross the zero line (x-axis) often due to noise, while events have long periods over/under the zero line
 def ts_zero_crossings(x):
     return np.sum(x[0:-1]*x[1::] <= 0)
-def ts_max_frequency(frame, samprate=10000):
+
+# Fourier transforms can distinguish between events and non-events due to 
+def max_frequency(frame, samprate=10000):
     fs = samprate
     dt = 1/fs
     t = np.arange(0, (len(frame)*dt), dt)
@@ -490,7 +515,7 @@ def contrast_all_files(output_filename, window_size, test_stat_fns, samprate,
             file.write(",".join([str(window_size), key]) + "," + ','.join(np.round(cont, 4).astype(str)) + "\n")
 
 
-# In[10]:
+# In[11]:
 
 
 output_filename_event_det_opt = OUT_PATH + "event_detection_optimisation.csv"
@@ -636,6 +661,8 @@ neigh.fit(X_train, y_labels)
 def consecutive(data, stepsize=0):                              
     return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
 
+# looks for the first sequence where the sign doesn't change for a period of time,
+# checks whether the average height is higher or lower than a threshold then classifies
 @njit 
 def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec_seconds = 0.2):
     arr_ds = arr[0::downsample_rate]
@@ -653,7 +680,8 @@ def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec
         i += len(sub_arr)
     return '_'   
 
-
+# calculates the 5 features selected from catch22, find the 5 nearest neighbours 
+# calculated using Euclidean distance, then selects the majority classification
 def catch22_knn_classifier(arr, samprate, downsample_rate=10):
     arr_ds = arr[0::downsample_rate]
     arr_list = arr_ds.tolist()
@@ -665,7 +693,8 @@ def catch22_knn_classifier(arr, samprate, downsample_rate=10):
     test_features = [[feature_one, feature_two, feature_three, feature_four, feature_five]]
     return neigh.predict(test_features)[0]                    
 
-
+# wave is smoothed using Savitzky-Golay Filter, then decides whether the event is
+# a left or right depending on whether the first turning point is a max or min
 def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
     fs = samprate/downsample_rate
@@ -713,7 +742,8 @@ def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_s
         else:
             return "_"
 
-
+# wave is smoothed using Savitzky-Golay Filter, then decides whether the event is
+# a left or right depending on the order of the maximum and minimum turning points
 def two_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, 
                                        window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
@@ -772,7 +802,8 @@ def two_pronged_smoothing_classifier(arr, samprate, downsample_rate=10,
     else:
         return "_"
 
-
+# finds the index of the max and min values in the wave, then classifies
+# based on whether the max or min value occurred first
 def max_min_classifier(arr, samprate, downsample_rate=10):
     arr_ds = arr[0::downsample_rate]
     arr_max = np.amax(arr_ds)
@@ -786,7 +817,10 @@ def max_min_classifier(arr, samprate, downsample_rate=10):
     else:
         return "_"
 
-    
+# finds the index of the max and min values in the wave, then checks whether both
+# values are outside the range. If both are outside, then classification is based
+# on whether max or min value occurred first. Else, if only one is outside, then
+# classification is based on whether the max or min's magnitude is larger
 def max_min_range_classifier(arr, samprate, downsample_rate=10, rng = 35):
     arr_ds = arr[0::downsample_rate]
     arr_max = np.amax(arr_ds)
@@ -1041,8 +1075,11 @@ streaming_classifier(
     )
 
 
-# In[ ]:
+# ## References 
+# 
+# e.g {cite}`holdgraf_rapid_2016`
 
+# ```{bibliography}
+# ```
 
-
-
+# http://blog.juliusschulz.de/blog/ultimate-ipython-notebook
