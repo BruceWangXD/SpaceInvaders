@@ -324,7 +324,7 @@
 <span class="c1"># Update this to point to the report folder</span>
 <span class="n">PATH</span> <span class="o">=</span> <span class="s2">&quot;/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/&quot;</span>
 <span class="c1"># To run all computation, change to True. Otherwise, precomputed files will be loaded instead.</span>
-<span class="n">compute_all</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">compute_all</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="c1"># If running, ensure the following line is commented out. It disables plots for knitting to html purposes. </span>
 <span class="o">%</span><span class="k">matplotlib</span> agg
 
@@ -446,7 +446,7 @@ data7
 </div>
 </div>
 <div class="figure align-default" id="flow">
-<a class="reference internal image-reference" href="_images/flow.png"><img alt="_images/flow.png" src="_images/flow.png" style="width: 1181.5px; height: 1519.0px;" /></a>
+<a class="reference internal image-reference" href="_images/flow.png"><img alt="_images/flow.png" src="_images/flow.png" style="width: 708.9px; height: 911.4px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Flowy.</span><a class="headerlink" href="#flow" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`flow` --></div>
@@ -656,7 +656,8 @@ data7
 <span class="k">def</span> <span class="nf">ts_abs_max</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
-<span class="c1"># non-events cross the zero line (x-axis) often due to noise, while events have long periods over/under the zero line</span>
+<span class="c1"># non-events cross the zero line (x-axis) often due to noise, </span>
+<span class="c1"># while events have long periods over/under the zero line</span>
 <span class="k">def</span> <span class="nf">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">::]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
 
@@ -791,14 +792,6 @@ data7
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0 of 100
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>10 of 100
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
@@ -827,13 +820,13 @@ data7
 </div>
 </div>
 <div class="figure align-default" id="contrast">
-<a class="reference internal image-reference" href="_images/contrast.png"><img alt="_images/contrast.png" src="_images/contrast.png" style="width: 350.0px; height: 350.0px;" /></a>
+<a class="reference internal image-reference" href="_images/contrast.png"><img alt="_images/contrast.png" src="_images/contrast.png" style="width: 525.0px; height: 525.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 2 </span><span class="caption-text">Contrast of each test statistic as a function of window size. We can see that zero crossings produces the maximum contrast at a window length of 0.35 seconds.</span><a class="headerlink" href="#contrast" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`contrast` --></div>
 <div class="section" id="threshold-optimisation">
 <h4>Threshold Optimisation<a class="headerlink" href="#threshold-optimisation" title="Permalink to this headline">¶</a></h4>
-<div class="cell tag_hide-input docutils container">
+<div class="cell tag_hide-input tag_hide-output docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_filename_thresh_opt</span> <span class="o">=</span> <span class="n">OUT_PATH</span> <span class="o">+</span> <span class="s2">&quot;threshold_optimisation.csv&quot;</span>
 
@@ -886,20 +879,6 @@ data7
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.09999999999999999 0.7596153846153846
-0.2 0.957345971563981
-0.3 0.9859154929577465
-0.4 0.9674418604651163
-0.5 0.9493087557603687
-0.6 0.9483568075117371
-0.7000000000000001 0.9295774647887324
-0.8 0.8909952606635071
-0.9 0.7830188679245284
-1.0 0.5625
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
@@ -926,7 +905,7 @@ data7
 </div>
 </div>
 <div class="figure align-default" id="threshold">
-<a class="reference internal image-reference" href="_images/threshold.png"><img alt="_images/threshold.png" src="_images/threshold.png" style="width: 350.0px; height: 350.0px;" /></a>
+<a class="reference internal image-reference" href="_images/threshold.png"><img alt="_images/threshold.png" src="_images/threshold.png" style="width: 525.0px; height: 525.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 3 </span><span class="caption-text">Plot of the F score for different threshold factors on the training set. The threshold is obtained by multiplying the zero crossings of the calibration window (normalised by the length of the window) by the threshold factor. We find the highest F score occurs when the threshold factor is 0.27.</span><a class="headerlink" href="#threshold" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`threshold` --></div>
@@ -1245,87 +1224,6 @@ data7
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>One-pronged
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-Two-pronged
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-Max-Min
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-Max-Min-Range
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-Zeros
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-KNN
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-Naive Random
-0 of 200
-20 of 200
-40 of 200
-60 of 200
-80 of 200
-100 of 200
-120 of 200
-140 of 200
-160 of 200
-180 of 200
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
@@ -1336,10 +1234,7 @@ Naive Random
     <span class="n">filt</span> <span class="o">=</span> <span class="n">results_agg</span><span class="o">.</span><span class="n">classifier</span> <span class="o">==</span> <span class="n">classifier</span>
     <span class="n">max_arg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">savgol_filter</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">savgol_filter</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">classifier</span> <span class="o">==</span> <span class="s2">&quot;Max-Min-Range&quot;</span><span class="p">:</span>
-        <span class="n">optimal_cl_window</span> <span class="o">=</span> <span class="n">opt_det_window</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">optimal_cl_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">window_size</span><span class="p">)[</span><span class="n">max_arg</span><span class="p">]</span>
+    <span class="n">optimal_cl_window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">window_size</span><span class="p">)[</span><span class="n">max_arg</span><span class="p">]</span>
     <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">optimal_cl_window</span>
     
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">window_size</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">savgol_filter</span><span class="p">(</span><span class="n">results_agg</span><span class="p">[</span><span class="n">filt</span><span class="p">]</span><span class="o">.</span><span class="n">accuracy</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
@@ -1353,7 +1248,7 @@ Naive Random
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt_det_window</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Detection Window Lowerbound&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt_det_window</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Detection Window Lowerbound&quot;</span><span class="p">)</span>
 
 
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
@@ -1363,9 +1258,9 @@ Naive Random
 </div>
 </div>
 <div class="figure align-default" id="classifier">
-<a class="reference internal image-reference" href="_images/classifier.png"><img alt="_images/classifier.png" src="_images/classifier.png" style="width: 350.0px; height: 350.0px;" /></a>
+<a class="reference internal image-reference" href="_images/classifier.png"><img alt="_images/classifier.png" src="_images/classifier.png" style="width: 525.0px; height: 525.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 4 </span><span class="caption-text">Training accuracy of each classifier as a function of classification window length. The classification window is lower bounded by the detection window, represented by the shaded region.
-Ideally, we want to minimise window length while maximising accuracy. With this in mind, both One-Pronged and Max-Min-Range classifiers stand out. We see that the Max-Min-Range classifier has consistently high accuracy for all window lengths so we can set its window length to be the lowerbound of 0.35 seconds without compromising accuracy. The One-Pronged peaks at a relatively short window length of 0.62 seconds.</span><a class="headerlink" href="#classifier" title="Permalink to this image">¶</a></p>
+Ideally, we want to minimise window length while maximising accuracy. With this in mind, we see that the Max-Min-Range classifier has the highest accuracy at a window length equal to be the lowerbound of 0.35 seconds. This makes it the most optimal classifier by both accuracy and latency.</span><a class="headerlink" href="#classifier" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`classifier` --></div>
 <div class="section" id="evaluation">
@@ -1415,15 +1310,6 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>One-pronged
-Two-pronged
-Max-Min
-Max-Min-Range
-Zeros
-KNN
-Naive Random
-</pre></div>
-</div>
 <div class="output text_html"><div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {

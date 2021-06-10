@@ -31,7 +31,7 @@ warnings.filterwarnings('ignore')
 # Update this to point to the report folder
 PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/"
 # To run all computation, change to True. Otherwise, precomputed files will be loaded instead.
-compute_all = True
+compute_all = False
 # If running, ensure the following line is commented out. It disables plots for knitting to html purposes. 
 get_ipython().run_line_magic('matplotlib', 'agg')
 
@@ -134,7 +134,7 @@ time_buffers_whole = {
 
 # ```{figure} ../report_outputs/flow.png
 # ---
-# scale: 50%
+# scale: 30%
 # name: flow
 # ---
 # Flowy.
@@ -354,7 +354,8 @@ def ts_IQR(x):
 def ts_abs_max(x): 
     return np.max(np.abs(x))
 
-# non-events cross the zero line (x-axis) often due to noise, while events have long periods over/under the zero line
+# non-events cross the zero line (x-axis) often due to noise, 
+# while events have long periods over/under the zero line
 def ts_zero_crossings(x):
     return np.sum(x[0:-1]*x[1::] <= 0)
 
@@ -516,7 +517,7 @@ plt.savefig(OUT_PATH+"contrast.png")
 
 # ```{figure} ../report_outputs/contrast.png
 # ---
-# scale: 50%
+# scale: 75%
 # name: contrast
 # ---
 # Contrast of each test statistic as a function of window size. We can see that zero crossings produces the maximum contrast at a window length of 0.35 seconds.
@@ -603,7 +604,7 @@ plt.savefig(OUT_PATH+"threshold.png")
 
 # ```{figure} ../report_outputs/threshold.png
 # ---
-# scale: 50%
+# scale: 75%
 # name: threshold
 # ---
 # Plot of the F score for different threshold factors on the training set. The threshold is obtained by multiplying the zero crossings of the calibration window (normalised by the length of the window) by the threshold factor. We find the highest F score occurs when the threshold factor is 0.27.
@@ -848,7 +849,7 @@ classifier_colours = {"One-pronged": "tab:blue",
 
 # #### Accuracy Metric
 
-# In[17]:
+# In[15]:
 
 
 def my_lev_dist(prediction, actual, sub_L_cost = 1.25, sub_R_cost = 1.25,
@@ -868,7 +869,7 @@ def my_lev_dist(prediction, actual, sub_L_cost = 1.25, sub_R_cost = 1.25,
 
 # #### Classifier Optimisation
 
-# In[18]:
+# In[16]:
 
 
 output_filename_cls_opt = OUT_PATH + "classifier_optimisation.csv"
@@ -919,7 +920,7 @@ results_agg = results.groupby(["window_size", "classifier"]).mean()
 results_agg.reset_index(inplace=True)
 
 
-# In[19]:
+# In[17]:
 
 
 optimal_cl_windows = {}
@@ -929,10 +930,7 @@ for classifier in results.classifier.unique():
     filt = results_agg.classifier == classifier
     max_arg = np.argmax(signal.savgol_filter(results_agg[filt].accuracy, 15, 1))
     max_val = np.max(signal.savgol_filter(results_agg[filt].accuracy, 15, 1))
-    if classifier == "Max-Min-Range":
-        optimal_cl_window = opt_det_window
-    else:
-        optimal_cl_window = np.array(results_agg[filt].window_size)[max_arg]
+    optimal_cl_window = np.array(results_agg[filt].window_size)[max_arg]
     optimal_cl_windows[classifier] = optimal_cl_window
     
     plt.plot(results_agg[filt].window_size, signal.savgol_filter(results_agg[filt].accuracy, 15, 1),
@@ -946,7 +944,7 @@ plt.title("Classifier Accuracy vs. Classification Window Length")
 plt.ylim(0, 1)
 plt.xlim(0, 2)
 
-plt.fill_between([0, opt_det_window], 0, 1, color="y", alpha = 0.2, label="Detection Window Lowerbound")
+plt.fill_between([0, opt_det_window], 0, 1, color="k", alpha = 0.2, label="Detection Window Lowerbound")
 
 
 plt.legend(loc="lower right")
@@ -955,17 +953,17 @@ plt.savefig(OUT_PATH+"classifier.png")
 
 # ```{figure} ../report_outputs/classifier.png
 # ---
-# scale: 50%
+# scale: 75%
 # name: classifier
 # ---
 # Training accuracy of each classifier as a function of classification window length. The classification window is lower bounded by the detection window, represented by the shaded region.
-# Ideally, we want to minimise window length while maximising accuracy. With this in mind, both One-Pronged and Max-Min-Range classifiers stand out. We see that the Max-Min-Range classifier has consistently high accuracy for all window lengths so we can set its window length to be the lowerbound of 0.35 seconds without compromising accuracy. The One-Pronged peaks at a relatively short window length of 0.62 seconds.
+# Ideally, we want to minimise window length while maximising accuracy. With this in mind, we see that the Max-Min-Range classifier has the highest accuracy at a window length equal to be the lowerbound of 0.35 seconds. This makes it the most optimal classifier by both accuracy and latency.
 # ```
 # <!-- reference by {numref}`classifier` -->
 
 # #### Evaluation
 
-# In[20]:
+# In[18]:
 
 
 output_filename_tst_res = OUT_PATH + "test_results.csv"
@@ -1013,7 +1011,7 @@ test_results
 
 # ## Appendix
 
-# In[21]:
+# In[19]:
 
 
 def encode_msg_size(size: int) -> bytes:
@@ -1027,7 +1025,7 @@ def create_msg(content: bytes) -> bytes:
     return encode_msg_size(size) + content
 
 
-# In[22]:
+# In[20]:
 
 
 def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibration_seconds = 5, 
@@ -1083,7 +1081,7 @@ fig.tight_layout()
 fig.savefig(OUT_PATH + "dataset_plot.png")
 
 
-# In[24]:
+# In[21]:
 
 
 # Final classifier used for Space Invaders
