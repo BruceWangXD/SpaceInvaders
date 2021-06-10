@@ -504,8 +504,8 @@ for stat in tfn_candidates.keys():
              label = f"{stat} Contrast", alpha = 1)
 
 plt.title("Event Region Contrast vs. Detection Window")
-plt.xlabel("Detection Window Length (s)")    
-plt.ylabel("Contrast (t Test Statistic)")  
+plt.xlabel("Detection Window Length (s)")
+plt.ylabel("Contrast (t Test Statistic)")
 opt_det_window = contrasts_total.index[np.argmax(np.abs(contrasts_total["Zero Crossings"]))]/samprate
 opt_det_window_val = np.max(np.abs(contrasts_total["Zero Crossings"]))
 plt.vlines(opt_det_window, 0, opt_det_window_val,"r", ":", 
