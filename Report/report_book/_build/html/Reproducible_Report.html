@@ -318,19 +318,24 @@
 <span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
 <span class="kn">from</span> <span class="nn">weighted_levenshtein</span> <span class="kn">import</span> <span class="n">lev</span>
 <span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
 
-
-<span class="c1"># Disables plots. Comment out this line to show plots generated from code.</span>
-<span class="c1"># %matplotlib agg</span>
+<span class="c1"># Update this to point to the report folder</span>
+<span class="n">PATH</span> <span class="o">=</span> <span class="s2">&quot;/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/&quot;</span>
+<span class="c1"># To run all computation, change to True. Otherwise, precomputed files will be loaded instead.</span>
+<span class="n">compute_all</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="c1"># If running, ensure the following line is commented out. It disables plots for knitting to html purposes. </span>
+<span class="o">%</span><span class="k">matplotlib</span> agg
 
 <span class="c1"># Set seed for reproducibility</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">420</span><span class="p">)</span> 
 <span class="c1"># Path to outputs folder</span>
-<span class="n">OUT_PATH</span> <span class="o">=</span> <span class="s2">&quot;/Users/stephanie/Desktop/Aqua10/Report/report_outputs/&quot;</span>
+<span class="n">OUT_PATH</span> <span class="o">=</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;report_outputs/&quot;</span>
 <span class="c1"># Path to data</span>
-<span class="n">IN_PATH</span> <span class="o">=</span> <span class="s2">&quot;/Users/stephanie/Desktop/Aqua10/Datasets/data/&quot;</span>
+<span class="n">IN_PATH</span> <span class="o">=</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;data/&quot;</span>
 <span class="c1"># Path to other file dependencies</span>
-<span class="n">DEP_PATH</span> <span class="o">=</span> <span class="s2">&quot;/Users/stephanie/Desktop/Aqua10/Report/requirements/other_files/&quot;</span>
+<span class="n">DEP_PATH</span> <span class="o">=</span> <span class="n">PATH</span> <span class="o">+</span> <span class="s2">&quot;other_files/&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -396,30 +401,16 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">FileNotFoundError</span><span class="g g-Whitespace">                         </span>Traceback (most recent call last)
-<span class="o">&lt;</span><span class="n">ipython</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="n">a8397ba8da66</span><span class="o">&gt;</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-<span class="g g-Whitespace">     </span><span class="mi">24</span> 
-<span class="g g-Whitespace">     </span><span class="mi">25</span> <span class="c1"># Training Data</span>
-<span class="ne">---&gt; </span><span class="mi">26</span> <span class="n">waves</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span>
-<span class="g g-Whitespace">     </span><span class="mi">27</span>     <span class="n">IN_PATH</span><span class="p">,</span> <span class="n">training_files</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">)</span>
-<span class="g g-Whitespace">     </span><span class="mi">28</span> 
-
-<span class="nn">&lt;ipython-input-2-a8397ba8da66&gt;</span> in <span class="ni">load_data</span><span class="nt">(path, fnames, scale_factor, shift_factor)</span>
-<span class="g g-Whitespace">      </span><span class="mi">4</span>     <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">fnames</span><span class="p">:</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span>         <span class="c1"># Load in wave file</span>
-<span class="ne">----&gt; </span><span class="mi">6</span>         <span class="n">samprate</span><span class="p">,</span> <span class="n">wav_array</span> <span class="o">=</span> <span class="n">wavfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">file</span><span class="o">+</span><span class="s2">&quot;.wav&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">7</span>         <span class="n">wav_array</span> <span class="o">=</span> <span class="n">wav_array</span><span class="o">*</span><span class="n">scale_factor</span>
-<span class="g g-Whitespace">      </span><span class="mi">8</span>         <span class="n">wav_array</span> <span class="o">+=</span> <span class="n">shift_factor</span>
-
-<span class="nn">~/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/scipy/io/wavfile.py</span> in <span class="ni">read</span><span class="nt">(filename, mmap)</span>
-<span class="g g-Whitespace">    </span><span class="mi">542</span>         <span class="n">mmap</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="g g-Whitespace">    </span><span class="mi">543</span>     <span class="k">else</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">544</span>         <span class="n">fid</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">545</span> 
-<span class="g g-Whitespace">    </span><span class="mi">546</span>     <span class="k">try</span><span class="p">:</span>
-
-<span class="ne">FileNotFoundError</span>: [Errno 2] No such file or directory: &#39;/Users/stephanie/Desktop/Aqua10/Datasets/data/data8.wav&#39;
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Successfully loaded 6 wavefiles:
+data1
+data2
+data3
+data4
+data6
+data8
+Successfully loaded 2 wavefiles:
+data5
+data7
 </pre></div>
 </div>
 </div>
@@ -700,11 +691,10 @@
 </div>
 <div class="section" id="evaluation-metric-contrast">
 <h4>Evaluation Metric (Contrast)<a class="headerlink" href="#evaluation-metric-contrast" title="Permalink to this headline">¶</a></h4>
-<p>To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called <em>contrast</em>. Essentially, contrast is the absolute value of the Welch’s t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined by the following formula:
-$<span class="math notranslate nohighlight">\(
-\textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}
-\)</span><span class="math notranslate nohighlight">\(
-where \)</span>E<span class="math notranslate nohighlight">\( is the set of test statistics calculated over event regions, \)</span>E^*<span class="math notranslate nohighlight">\( is the non-event region test statistics, and \)</span>\bar{k}<span class="math notranslate nohighlight">\(, \)</span>\sigma_k<span class="math notranslate nohighlight">\( and \)</span>N_k<span class="math notranslate nohighlight">\( are the mean, standard deviation and number of elements in set \)</span>k$ respectively.</p>
+<p>To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called <em>contrast</em>. Essentially, contrast is the absolute value of the Welch’s t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined by the following formula:</p>
+<div class="math notranslate nohighlight" id="equation-my-label">
+<span class="eqno">(1)<a class="headerlink" href="#equation-my-label" title="Permalink to this equation">¶</a></span>\[\textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(E\)</span> is the set of test statistics calculated over event regions, <span class="math notranslate nohighlight">\(E^*\)</span> is the non-event region test statistics, and <span class="math notranslate nohighlight">\(\bar{k}\)</span>, <span class="math notranslate nohighlight">\(\sigma_k\)</span> and <span class="math notranslate nohighlight">\(N_k\)</span> are the mean, standard deviation and number of elements in set <span class="math notranslate nohighlight">\(k\)</span> respectively.</p>
 <div class="cell tag_hide-input docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">contrast</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">non_events</span><span class="p">):</span> 
@@ -797,6 +787,14 @@ where \)</span>E<span class="math notranslate nohighlight">\( is the set of test
         <span class="n">contrast_fn</span> <span class="o">=</span> <span class="n">contrast</span><span class="p">,</span>
         <span class="n">time_buffers</span> <span class="o">=</span> <span class="n">time_buffers_whole</span>
     <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">  File</span><span class="nn"> &quot;&lt;ipython-input-9-e4c685c27f29&gt;&quot;</span><span class="gt">, line </span><span class="mi">8</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">)</span>
+                                 <span class="o">^</span>
+<span class="ne">SyntaxError</span>: EOL while scanning string literal
 </pre></div>
 </div>
 </div>

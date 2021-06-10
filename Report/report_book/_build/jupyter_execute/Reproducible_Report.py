@@ -25,19 +25,25 @@ from sklearn.neighbors import KNeighborsClassifier
 from numba import njit
 from weighted_levenshtein import lev
 import struct
+import warnings
+warnings.filterwarnings('ignore')
 
-
-# Disables plots. Comment out this line to show plots generated from code.
-# %matplotlib agg
+# Update this to point to the report folder
+PATH = "/Users/billydodds/Documents/Uni/DATA3888/Aqua10/Report/"
+# To run all computation, change to True. Otherwise, precomputed files will be loaded instead.
+compute_all = False
+# If running, ensure the following line is commented out. It disables plots for knitting to html purposes. 
+get_ipython().run_line_magic('matplotlib', 'agg')
 
 # Set seed for reproducibility
 np.random.seed(420) 
 # Path to outputs folder
-OUT_PATH = "/Users/stephanie/Desktop/Aqua10/Report/report_outputs/"
+OUT_PATH = PATH + "report_outputs/"
 # Path to data
-IN_PATH = "/Users/stephanie/Desktop/Aqua10/Datasets/data/"
+IN_PATH = PATH + "data/"
 # Path to other file dependencies
-DEP_PATH = "/Users/stephanie/Desktop/Aqua10/Report/requirements/other_files/"
+DEP_PATH = PATH + "other_files/"
+
 
 
 # ## Introduction
@@ -98,7 +104,7 @@ samprate = 10_000
 # Next, we convert the singular timestamps in the labels dataframe to the time interval of the entire event. There was a minor data quality issue with some of the timestamps which caused some files to have slightly shifted timestamps. To fix this, we went through and manually defined the interval for each file (the time to add before and after the timestamp to get the desired interval). We did this once to encompass the entire wave signal, and another time to only cover the first hump of the signal.
 # 
 
-# In[10]:
+# In[3]:
 
 
 # First hump
@@ -148,7 +154,7 @@ time_buffers_whole = {
 # 
 # 
 
-# In[ ]:
+# In[4]:
 
 
 # Function that reads in the kth <inputBufferSize> sized segment of the array
@@ -161,7 +167,7 @@ def read_arduinbro(wav_array, inputBufferSize, k):
     return np.flip(data)
 
 
-# In[ ]:
+# In[5]:
 
 
 def streaming_classifier(
@@ -332,7 +338,7 @@ def streaming_classifier(
 # 
 # The first component to optimising event detection is to choose the best test statistic to be applied over the detection window. To do this, we first define 5 possible candidates for the test statistic. These candidates were chosen because they were deemed likely to be effective in distinguishing events from non-events. 
 
-# In[ ]:
+# In[6]:
 
 
 # Define Test Stat Functions
@@ -381,12 +387,13 @@ tfn_candidates = {"Range": ts_range,
 # #### Evaluation Metric (Contrast)
 # 
 # To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called *contrast*. Essentially, contrast is the absolute value of the Welch's t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined by the following formula:
-# $$
+# ```{math}
+# :label: my_label
 # \textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}
-# $$
+# ```
 # where $E$ is the set of test statistics calculated over event regions, $E^*$ is the non-event region test statistics, and $\bar{k}$, $\sigma_k$ and $N_k$ are the mean, standard deviation and number of elements in set $k$ respectively.
 
-# In[ ]:
+# In[7]:
 
 
 def contrast(events, non_events): 
@@ -396,7 +403,7 @@ def contrast(events, non_events):
 
 # Next, we perform a gridsearch varying the window length from 0 to 2 seconds and calculating the contrast of each test statistic each window length. Below, we 
 
-# In[ ]:
+# In[8]:
 
 
 def get_event_regions(wav_array, samprate, labels_dat, time_buffer):
@@ -456,7 +463,7 @@ def contrast_all_files(output_filename, window_size, test_stat_fns, samprate,
             file.write(",".join([str(window_size), key]) + "," + ','.join(np.round(cont, 4).astype(str)) + "\n")
 
 
-# In[ ]:
+# In[9]:
 
 
 output_filename_event_det_opt = OUT_PATH + "event_detection_optimisation.csv"
