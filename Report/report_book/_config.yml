@@ -3,7 +3,7 @@
 
 title: Making Space Invaders Fun and Accessible with Brain-Computer Interfacing
 author: Brain10
-logo: logo.png
+logo: enemy2_1.png
 
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html

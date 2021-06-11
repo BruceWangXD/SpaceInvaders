@@ -18,8 +18,6 @@
 
 # ### Dependencies
 
-# ## Motivation & Background
-
 # In[1]:
 
 
@@ -60,6 +58,8 @@ IN_PATH = PATH + "data/"
 DEP_PATH = PATH + "requirements/other_files/"
 
 
+
+# ## Motivation & Background
 
 # Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over \$21 billion alone {cite}`VR`, the gaming industry is evidently undergoing a similar transformation. Such financial success is reason enough to design and implement a game that is similarly controlled by one of these technological advancements. This project involves using gesture control, an instance of one of these technological advancements, to re-develop Space Invaders, the iconic 80’s game which grossed an equivalent of $13 billion {cite}`SpaceInvaders`. 
 # 
