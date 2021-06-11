@@ -82,37 +82,44 @@ DEP_PATH = PATH + "requirements/other_files/"
 # ```
 # <!-- reference by {numref}`flow` -->
 
-# ## Experimentation & Data Collection
+# ## Methods
+# ### Experimentation & Data Collection
 # 
 # In reference to {numref}`flow`, the first step in the re-development of Space Invaders requires experimenting with the Spikerbox to collect data which is representative application of the game. The aim of experimentation is to define characteristic signal signatures (such as left and right eye movements) and determine how these change as physical aspects of the experimental design vary.
 
-# ### Physical Experiments Performed & Findings
+# #### Physical Experiments Performed & Findings
 # 
 # The following sections detail the plethora of experiments performed and specifically what each test was exploring.
 # 
 # 
 
-# #### General eye movements
+# **General eye movements**
+# 
 # The first experiment is to determine if distinguishing between left and right eye movements is possible. Two electrodes were placed above the eyebrow of a team members eye and they were instructed to look forward. Then, the team member moved their eyes left or right, then immediately back to the middle.  (insert figure reference to signal graph) illustrates that while the signal shape of left and right eye movements appears the same, the polarity of the signals is inverted.
 # 
-# #### Varying speed of eye movements
+# **Varying speed of eye movements**
+# 
 # The team member is now instructed to vary the speed at which they look left or right. It was found that when eye movements were too slow, the signal associated with looking from the middle to the left and looking from the left back to the middle became separated. However, with fast eye-movements, these two separate signals became one, yielding the same output as before.
 # 
-# #### Varying distance of eye movements
+# **Varying distance of eye movements**
+# 
 # Now, the team member is asked to perform normal left-middle and right-middle eye movements, but with each iteration they must look further away from the middle position. This involved placing objects equally apart, acting as targets to look at. It was found that if the eye moved slightly away from the middle, a signal was barely detectable. This distance was not quantified, as it is dependent on the individual performing the experiment. As the eyes moved further away from the centre, the amplitude of the signal grew accordingly. 
 # 
-# #### Electrode placement
+# **Electrode placement**
+# 
 # We now experiment with the configuration of the electrode placements. It was found that placing the electrode vertically across the eye as opposed to horizontally no longer generates a distinguishable signal for left and right eye movements. Instead, the best movement associated with this placement is up and down.
 # 
 # Additionally, it was found that altering the distance between the electrodes to be closer than around 3cm to each other failed to generate a noticeable, distinguishable signal with left and right eye movements.
 # 
-# #### Changing individual & changing boxes
+# **Changing individual & changing boxes**
+# 
 # As experimental equipment was swapped, such as the Spikerbox itself, electrodes and connecting wires, or a new team member collecting the data, the signal generated was subject to change. Such changes included variation in noise, signal amplitude and in worst cases a completely different signal signature.
 # 
-# #### Determining how the signal changes with natural movements
+# **Determining how the signal changes with natural movements**
+# 
 # The user is now asked to sit still and blink naturally, then move their face (smile, raise their eyebrows, shake their head, scrunch their nose, etc.). The blinks were small, detectable peaks in the signal, whereas movement of the muscles in their face cause a dramatic increase in noise and sometimes amplitude.
 
-# ### Immediate Implications of Findings 
+# #### Immediate Implications of Findings 
 # 
 # From our above findings, we can immediately adapt the final experimental design to ensure the cleanest and most noticeable signal is generated. 
 # - Throughout the rest of the experiment, data was collected by placing the electrodes at least 3cm apart in a horizontal configuration above the eyebrow. 
@@ -122,7 +129,7 @@ DEP_PATH = PATH + "requirements/other_files/"
 # - To overcome the issue due to noise, it would be appropriate during pre-processing to use a noise filter. 
 # - To overcome the issue due to changing signal amplitude, pre-processing of the signal should additionally involve normalisation or calibration.
 
-# ### Sample Collection of Data
+# #### Sample Collection of Data
 # We have prepared 8 wave files (.wav) to the following specifications:
 # - 50 seconds in length
 # - First 5 seconds is a calibration period - no movements performed
@@ -224,7 +231,7 @@ time_buffers_whole = {
 }
 
 
-# ### Streaming Algorithm Design
+# #### Streaming Algorithm Design
 # 
 # First, we must design the basic structure of our streaming algorithm. The algorithm will consist of two parts, the first is event detection, and the second is classification. As the streaming data comes in, we will only keep a window of fixed length in memory, effectively behaving as a sliding window at the front of the stream. This window updates in discrete intervals of some *buffer length*, and we will deem this window the *classification window*. 
 # 
@@ -407,18 +414,18 @@ def streaming_classifier(
                   
 
 
-# ## Optimisation
+# ### Optimisation
 # 
 # We optimise the streaming algorithm in two dependent stages. The first stage is to optimise event detection by choosing the best test statistic and threshold to apply over the detection window. The test statistic will be the statistic that maximises the contrast between event and non-event regions, and the threshold will be the threshold that maximises the F-score on the training set. 
 # 
 # When our algorithm is effective at distinguishing events from non-events, we will use the optimised event detection method to optimise our classifiers on the training set. Once all classifiers are optimised, we will choose the classifier with the best accuracy on the test set based on a levenshtein distance weighted to reflect what is most desirable for its Space Invaders use.
 
-# ### Event Detection TO DO
+# #### Event Detection TO DO
 # 
 # 
 # (write lil nicer) Hypothesis from physics perspective: plotting contrast against window length we expect a peak which is the optimal point, taking the appearance of normalisation curve. Thus, two pieces of information (best metric and optimal window length) can be extracted.
 
-# #### Test Statistic
+# ##### Test Statistic
 # 
 # The first component to optimising event detection is to choose the best test statistic to be applied over the detection window. To do this, we first define 5 possible candidates for the test statistic. These candidates were chosen because they were deemed likely to be effective in distinguishing events from non-events. 
 
@@ -469,7 +476,7 @@ tfn_candidates = {"Range": ts_range,
                   "Fourier": ts_max_frequency}
 
 
-# #### Evaluation Metric (Contrast)
+# ##### Evaluation Metric (Contrast)
 # 
 # To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called *contrast*. Essentially, contrast is the absolute value of the Welch's t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined by the following formula:
 # ```{math}
@@ -609,7 +616,7 @@ plt.savefig(OUT_PATH+"contrast.png")
 # ```
 # <!-- reference by {numref}`contrast` -->
 
-# #### Threshold Optimisation
+# ##### Threshold Optimisation
 # 
 # Now that we have determined the best test statistic and its corresponding optimal detection window length, we will use these to determine the optimal threshold for event detection. To do this, we perform yet another gridsearch to maximise $F_1$-score. The results are displayed below in {numref}`threshold`.
 
@@ -697,14 +704,14 @@ plt.savefig(OUT_PATH+"threshold.png")
 # ```
 # <!-- reference by {numref}`threshold` -->
 
-# ### Classification TO DO
+# #### Classification TO DO
 # 
 # for physics aspect just mention:
 # - again, what we predict the evaluation graph should look like
 # - we used a signal to filter the noise for one-three prong (mention its a physics thing to do when explaining classifier)
 # 
 
-# #### Classifiers
+# ##### Classifiers
 
 # In[13]:
 
@@ -938,7 +945,7 @@ classifier_colours = {"One-pronged": "tab:blue",
                "Naive Random": "tab:red"}
 
 
-# #### Accuracy Metric
+# ##### Accuracy Metric
 
 # In[15]:
 
@@ -958,7 +965,7 @@ def my_lev_dist(prediction, actual, sub_L_cost = 1.25, sub_R_cost = 1.25,
     return lev(prediction, actual, substitute_costs = substitute_costs, delete_costs = delete_costs)
 
 
-# #### Classifier Optimisation
+# ##### Classifier Optimisation
 
 # In[16]:
 
