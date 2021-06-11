@@ -45,9 +45,9 @@ warnings.filterwarnings('ignore')
 # Update this to point to the report folder
 PATH = "../"
 # To run all computation, change to True. Otherwise, precomputed files will be loaded instead.
-compute_all = False
+compute_all = True
 # If running, ensure the following line is commented out. It disables plots for knitting to html purposes. 
-# %matplotlib agg
+get_ipython().run_line_magic('matplotlib', 'agg')
 
 # Set seed for reproducibility
 np.random.seed(420) 
@@ -130,15 +130,24 @@ DEP_PATH = PATH + "requirements/other_files/"
 # - To overcome the issue due to noise, it would be appropriate during pre-processing to use a noise filter. 
 # - To overcome the issue due to changing signal amplitude, pre-processing of the signal should additionally involve normalisation or calibration.
 
-# #### Sample Collection of Data
+# #### Data Collection
 # Using the points outlined in {ref}`methods:experiment:findings`, we prepared 8 wave files (.wav) to the following specifications:
 # - 50 seconds in length
 # - First 5 seconds is a calibration period - no movements performed
 # - A sequence of left and right movements are performed for the remaining 45 seconds
-# - Each file is accompanied with a labels textfile (.txt) containing the timestamps and labels of every event in the wavefile. '1' corresponds to a left eye movement, and '2' corresponds to a right eye movement.
+# - Each file is accompanied with a labels textfile (.txt) containing the timestamps and labels of every event in the wavefile. '1' corresponds to a left eye movement, and '2' corresponds to a right eye movement, their approximate shapes are shown in {numref}`signal`.
 # - Each .wav file has a range of [0, 1024], but are centred to [-512, 512] within the `load_data` function defined below.
 # 
 # Two of the eight files were randomly selected as the test set, and the rest were assigned to the training set. 
+
+# ```{figure} ../report_outputs/movement_signals.png
+# ---
+# scale: 75%
+# name: signal
+# ---
+# An example of the kind of signal produced by each movement, as well as noise that sometimes appeared in the recordings.
+# ```
+# <!-- reference by {numref}`signal` -->
 
 # In[2]:
 
@@ -201,13 +210,12 @@ calibration_window_sec = 5
 samprate = 10_000
 
 
-# Next, we convert the singular timestamps in the labels dataframe to the time interval of the entire event. There was a minor data quality issue with some of the timestamps which caused some files to have slightly shifted timestamps. To fix this, we went through and manually defined the interval for each file (the time to add before and after the timestamp to get the desired interval). We did this once to encompass the entire wave signal, and another time to only cover the first hump of the signal.
-# 
+# Next, we convert the singular timestamps in the labels dataframe to the time interval of the entire event. 
 
 # In[3]:
 
 
-# First hump
+# Creates an interval that covers the first hump
 time_buffers_hump = {
     "data1":(-0.3, 0.55),
     "data2":(-0.3, 0.55),
@@ -219,7 +227,7 @@ time_buffers_hump = {
     "data8":(-0.5, 0.75)
 }
 
-# Whole wave
+# Creates an interval that covers the whole wave
 time_buffers_whole = {
     "data1":(-0.2, 1.15),
     "data2":(-0.2, 1.15),
@@ -234,15 +242,13 @@ time_buffers_whole = {
 
 # #### Streaming Algorithm Design
 # 
-# First, we must design the basic structure of our streaming algorithm. The algorithm will consist of two parts, the first is event detection, and the second is classification. As the streaming data comes in, we will only keep a window of fixed length in memory, effectively behaving as a sliding window at the front of the stream. This window updates in discrete intervals of some *buffer length*, and we will deem this window the *classification window*. 
+# Once the data was prepared, we then had to design the basic structure of our streaming algorithm. The algorithm consists of two parts: event detection and classification. As the streaming data comes in, we only keep a window of fixed length in memory, effectively behaving as a sliding window at the front of the stream. This window updates in discrete intervals of some *buffer length*, and we call this window the *classification window*. 
 # 
-# Within that classification window, we will fix another smaller window that slides along with the classification window. This subset of the classification window is what we will test an event criterion on, and is hence called the *detection window*. 
+# Within that classification window, we fix another smaller window that slides along with the classification window. This subset of the classification window is what we will test an event criterion on, and is hence called the *detection window*. 
 # 
-# Each time the window is updated by the stream, the event criterion is tested on the detection window. To minimise false positives, that criterion will need to pass a set number of times, dictated by the `consecutive_event_triggers` parameter.
+# Each time the window is updated by the stream, the event criterion is tested on the detection window. To minimise false positives, that criterion will need to pass a set number of times, dictated by the `consecutive_event_triggers` parameter. 
 # 
-# Once the event criterion has passed `consecutive_event_triggers` times, we pass the classification window to the classifier algorithm and block the classifier from detecting another event. When the event criterion has failed `consecutive_nonevent_reset` times, we prime the streaming algorithm to predict events again. This is to stop the algorithm from detecting the same event twice.
-# 
-# 
+# Once the event criterion has passed `consecutive_event_triggers` times, we pass the classification window to the classifier algorithm and block the classifier from detecting another event. When the event criterion has failed `consecutive_nonevent_reset` times, we prime the streaming algorithm to predict events again. This is to stop the algorithm from detecting the same event twice. For details on how these two parameters were optimised, see {ref}`appendix:consecutive` in the Appendix.
 
 # In[4]:
 
@@ -417,7 +423,7 @@ def streaming_classifier(
 
 # ### Optimisation
 # 
-# We optimise the streaming algorithm in two dependent stages in accordance to {numref}`flow`. The first stage is to optimise event detection by choosing the best test statistic and threshold to apply over the detection window. The test statistic will be the statistic that maximises the contrast between event and non-event regions, and the threshold will be the threshold that maximises the F-score on the training set. 
+# We optimise the streaming algorithm in two dependent stages in accordance to {numref}`flow`. The first stage is to optimise event detection by choosing the best test statistic and threshold to apply over the detection window. The test statistic will be the statistic that maximises the contrast between event and non-event regions, and the threshold will be the threshold that maximises the $F_1$-score on the training set. 
 # 
 # When our algorithm is effective at distinguishing events from non-events, we will use the optimised event detection method to optimise our classifiers on the training set. Once all classifiers are optimised, we will choose the classifier with the best accuracy on the test set based on a levenshtein distance weighted to reflect what is most desirable for its Space Invaders use.
 # 
@@ -453,29 +459,12 @@ def ts_abs_max(x):
 def ts_zero_crossings(x):
     return np.sum(x[0:-1]*x[1::] <= 0)
 
-# Fourier transforms can distinguish between events and non-events due to 
-def ts_max_frequency(frame, samprate=10000):
-    fs = samprate
-    dt = 1/fs
-    t = np.arange(0, (len(frame)*dt), dt)
-    # Num samples
-    N = len(frame)
-    yf = fft(frame)
-    xf = fftfreq(N, 1/fs)
-    np.size(xf)
-    np.size(t)
-    f, t, Sxx = signal.spectrogram(frame, fs)
-    maximum = np.max(Sxx)
-    threshold = maximum/5;
-    maximum_Freqs = np.amax(Sxx, 0) # max frequency for each time
-    return np.amax(maximum_Freqs)
 
 tfn_candidates = {"Range": ts_range,
                   "IQR": ts_IQR,
                   "SD": np.std,
                   "Absolute Max": ts_abs_max,
-                  "Zero Crossings": ts_zero_crossings,
-                  "Fourier": ts_max_frequency}
+                  "Zero Crossings": ts_zero_crossings}
 
 
 # ##### Evaluation Metric (Contrast)
@@ -635,7 +624,15 @@ plt.savefig(OUT_PATH+"contrast.png")
 # <!-- reference it by {eq}`thresh` -->
 # Where $t$ is the threshold, $f$ is the threshold factor, $\mathbf{C}$ is calibration window and $\text{Z}$ is the normalised zero crossings as defined in {eq}`zeros`.
 # 
-# To do find the optimal threshold factor $f$, we perform yet another gridsearch to maximise $F_1$-score. The results are displayed below in {numref}`threshold`. We can see that a threshold factor of 0.33 results in the highest $F_1$-score of 0.995 over the training set.
+# To do find the optimal threshold factor $f$, we perform yet another gridsearch to maximise $F_1$-score, defined in {eq}`f1`. We have used the F1-score to determine the performance of the event detection, as it weighs false positives and false negatives equally. For our application, a false positive would result in the spaceship moving without a players consent, and a false negative would result in a missed movement. Both of these scenarios are equally undesirable.
+# 
+# ```{math}
+# :label: f1
+# F_1 = \frac{\text{TP}}{\text{TP}-\frac{1}{2}(\text{FP} + \text{FN})}
+# ```
+# <!-- reference it by {eq}`f1` -->
+# 
+# The results are displayed below in {numref}`threshold`. We can see that a threshold factor of 0.33 results in the highest $F_1$-score of 0.995 over the training set.
 
 # In[10]:
 
@@ -700,14 +697,14 @@ f_score_list = thresholds.f_score
 
 plt.figure(figsize=(7, 7))
 plt.plot(thresh_factors, f_score_list)
-plt.title("F-Score vs. Threshold Factor\n(Zero Crossings Calibration Statistic)")
+plt.title("$F_1$-Score vs. Threshold Factor\n(Zero Crossings Calibration Statistic)")
 opt_thresh = np.mean(thresh_factors[f_score_list == np.max(f_score_list)])
 opt_fscore = np.max(f_score_list)
 plt.vlines(opt_thresh, 0, opt_fscore, "r", ":", 
            label=f"Optimal Point ({round(opt_thresh, 2)}, {round(opt_fscore, 3)})")
 plt.hlines(opt_fscore, 0, opt_thresh, "r", ":")
 plt.xlabel("Threshold Factor")
-plt.ylabel("F-Score")
+plt.ylabel("$F_1$-Score")
 plt.legend(loc = "lower right")
 plt.savefig(OUT_PATH+"threshold.png")
 
@@ -717,7 +714,7 @@ plt.savefig(OUT_PATH+"threshold.png")
 # scale: 75%
 # name: threshold
 # ---
-# Plot of the $F_1$-score for different threshold factors on the training set. The threshold is obtained by multiplying the zero crossings of the calibration window (normalised by the length of the window) by the threshold factor. We find the highest $F_1$-score occurs when the threshold factor is 0.33.
+# Plot of the $F_1$-score for different threshold factors on the training set. The threshold is obtained by {eq]`thresh`. We find the highest $F_1$-score occurs when the threshold factor is 0.33.
 # ```
 # <!-- reference by {numref}`threshold` -->
 
@@ -911,6 +908,7 @@ def max_min_classifier(arr, samprate, downsample_rate=10):
 # values are outside the range. If both are outside, then classification is based
 # on whether max or min value occurred first. Else, if only one is outside, then
 # classification is based on whether the max or min's magnitude is larger
+@njit
 def max_min_range_classifier(arr, samprate, downsample_rate=10, rng = 35):
     arr_ds = arr[0::downsample_rate]
     arr_max = np.amax(arr_ds)
@@ -949,7 +947,7 @@ classifier_parameters = {"One-pronged": {},
                "Two-pronged": {},
                "Max-Min": {},
                "Max-Min-Range": {"rng":35},
-               "Zeros": {"consec_seconds": 0.2, "ave_height": 0.25},
+               "Zeros": {"consec_seconds": 0.18, "ave_height": 25},
                "KNN": {},
                "Naive Random": {}}
 
@@ -1144,11 +1142,18 @@ test_results
 
 # ## Discussion 
 
+# Initially, we used the Spike Recorder software to create and evaluate our data pipeline’s performance. But when we moved to the Python software (we had to do this because we had to integrate it with the rest of our Python code), we saw that the data was completely different. Both the threshold and shape of the signals varied between the two. This led to us re-evaluating all of the parameters of the data pipeline. We also had to perform normalisation on the new data. 
+# 
+# We noticed that the data obtained from the Python software had a tendency to be volatile: the random noise varied greatly at different times. To solve this issue, we calibrated our data pipeline by asking the player to keep their eyes still for 5 seconds. This allowed us to measure the amount of random noise at each particular time and hence we were able to adjust our parameters accordingly. Additionally, a few of our classifiers filter out the random noise in the data and make the waves smooth. The main cause of the random noise was, in our experience, some SpikerBoxes not working properly. So, we could reliably eliminate the volatility of the random noise by finding a SpikerBox that worked well.
+# 
+# Latency was a major problem in the initial stages of this project. There was a significant time delay between the eye movement and the `streaming_classifier` function being able to classify the eye movement. This was overcome by significantly reducing the window size. Additionally, when running the `streaming_classifier` function and the game in one file, we encountered significant latency. We resolved this by separating the function and the game into different files and running them at the same time. They interface through the use of inter-process communication.
+# 
+# Our final product for this project was a foundation model of Space Invaders. Future modifications to the game will include extra controls such as blinking or muscle movements to implement controlled shooting since we currently have smart shooting in the game which is continuous shooting unless the spaceship’s location is beneath a barrier. A multiplayer version will attract further attention as there will be an added level of competition. Another upgrade will be to include power ups such as having the ability to vary the speed of the spaceship in successive levels which will be implemented with arm muscle movements and how hard the players clenches their fist. Improvements to the actual programming aspect of the game will be to remove the use of named pipes and make it function as one application.  
 # 
 
 # ## Conclusion
 
-# 
+# Physics and data science students collaborated to develop a modern twist on the classic arcade game Space Invaders, where the players now control the game with their eyes. Through data collection, developing a classifier and evaluating the classifier, we were able to create a functioning game that utilises left and right eye movements. Due to the time restrictions, we were limited in the amount of controls we were able to implement, however, we aspire to develop future upgrades to the game. These include having controlled shooting which will be executed by another control such as blinks or muscle movements, imposing a multiplayer option and power ups in the game such as varying the speed of the spaceship. Despite the challenging nature of this project, we were able to combine data science and physics expertise to develop a very successful final product.  
 
 # ## Space Invaders!
 
@@ -1262,8 +1267,11 @@ streaming_classifier(
     )
 
 
+# (appendix:knn)=
+# ### KNN Optimisation
+# 
 # Below is the code used to perform feature selection on the features calculated using catch22 for the kNN classifier. An external set of data was used to determine these features as to not bias the optimisation process undertaken in 4.2.3.
-# This feature data was saved to `catch22_step_selected_features.csv` for use in the kNN classifier.
+# This feature data was saved to `catch22_step_selected_features.csv` for use in the kNN classifier. The method undertaken to perform feature selection is described in {cite}`kaggle`.
 
 # In[ ]:
 
@@ -1332,6 +1340,11 @@ selected_features_df['labels'] = event_labels
 # selected_features_df.to_csv(DEP_PATH+'catch22_step_selected_features.csv',index=False)
 
 
+# (appendix:consecutive)=
+# ### Triggers and Reset Optimisation
+# 
+# Below is the gridsearch used to optimise `consecutive_event_triggers` and `consecutive_nonevent_reset`. We chose the minimum pair with optimal f score of 0.993 - (3, 10). A minimum pair minimises latency.
+
 # In[ ]:
 
 
@@ -1389,11 +1402,271 @@ if compute_all:
         
 
 
+# (appendix:maxminrange)=
+# ### Max-Min-Range Optimisation
+# The following code performs a grid search to optimise the `rng` threshold for the Max-Min-Range classifier. The `rng` threshold is varied from 0 to 100 in increments of 1, and the corresponding weighted Levenshtein accuracies are plotted.
+
+# In[ ]:
+
+
+classifiers1 = {"Max-Min-Range": max_min_range_classifier}
+
+file_accuracies = {}
+
+buffer_size_sec = 0.05
+
+if compute_all:
+    for classifier_label, classifier in classifiers1.items():
+        #offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
+        print(classifier_label)
+        for range_threshold in np.linspace(0, 100, 101):
+            print("\nCurrent Range Threshold:", range_threshold)
+
+            current_accuracies = []
+            for i, key in enumerate(waves):
+                
+                predictions, predictions_timestamps = streaming_classifier(
+                    waves[key],
+                    samprate,
+                    classifiers[classifier_label],
+                    classifier_params={"rng" : range_threshold},
+                    input_buffer_size_sec = buffer_size_sec,
+                    classification_window_size_sec = 0.46,  #opt_det_window + 0.01
+                    detection_window_size_sec = 0.45,       #opt_det_window
+                    detection_window_offset_sec = 0.005,   #offset ^ uncomment it above
+                    calibration_window_size_sec = 5,
+                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                    event_threshold_factor = 0.33,          #opt_thresh 
+                    flip_threshold = True, 
+                    consecutive_event_triggers = 3, 
+                    consecutive_nonevent_reset = 10,
+                    live = False,
+                )
+                actuals = "".join(labels[key].label)
+
+                lev_dist = my_lev_dist(actuals, predictions)
+                acc = abs(len(actuals) - lev_dist)/len(actuals)
+                current_accuracies.append(acc)
+            if range_threshold in file_accuracies:
+                file_accuracies[range_threshold] += current_accuracies
+            else:
+                file_accuracies[range_threshold] = current_accuracies
+
+
+    ave_accuracies_per_range_val = {}
+    for range_thresh, acc_each_file_ls in file_accuracies.items():
+        ave_accuracies_per_range_val[range_thresh] = sum(acc_each_file_ls) / len(acc_each_file_ls)
+    print("done")
+
+    best_ranges = []
+    best_value = 0
+    for acc in ave_accuracies_per_range_val.values():
+        if round(acc, 5) > round(best_value, 5):  #need to round because python maintains its floats very imprecisly
+            best_value = acc
+
+    for key, value in ave_accuracies_per_range_val.items():
+        if round(value, 5) == round(best_value, 5):
+            best_ranges.append(key)
+
+    plt.figure(figsize=(10, 10))
+    plt.plot(ave_accuracies_per_range_val.keys(), ave_accuracies_per_range_val.values())
+    if len(best_ranges) > 1:
+        plt.vlines(best_ranges[0], 0, best_value, linestyle=":", label=f"Best Ranges: {round(best_ranges[0], 2)} to {round(best_ranges[len(best_ranges) - 1], 2)}, Accuracy = {round        (best_value, 2)}")
+        plt.vlines(best_ranges[len(best_ranges) - 1], 0, best_value, linestyle=":")
+        plt.axvspan(best_ranges[0], best_ranges[len(best_ranges) - 1], alpha=0.1, color='red')
+    else:
+        plt.vlines(best_ranges[0], 0, best_value, linestyle=":", label=f"Best Range: {round(best_ranges[0], 2)}, Accuracy = {round(best_value, 2)}")
+
+    plt.legend(loc = "lower right")
+    plt.ylabel("Weighted Levenshtein Accuracy")
+    plt.xlabel("Range Threshold")
+    plt.title("Classifier Accuracy vs. Range Threshold for Window Size of 0.46 Seconds")
+
+
+# (appendix:zeros)=
+# ### Zeros Optimisation
+# The following code performs a grid search to optimise the `consec_seconds` threshold for the Zeros classifier. The `rng` threshold is varied from 0.001 to 0.5, and the corresponding weighted Levenshtein accuracies are plotted. Note: we assume that the `consec_seconds` and `ave_height` are independent, which seems reasonable. This allows us to optimise them separately.
+
+# In[ ]:
+
+
+classifiers2 = {"Zeros": zeroes_classifier}
+
+file_accuracies = {}
+
+buffer_size_sec = 0.05
+if compute_all:
+    for classifier_label, classifier in classifiers2.items():
+        print(classifier_label)
+        for consec_threshold in np.linspace(0.001, 0.5, 100):
+            print("\nCurrent Consec Threshold:", consec_threshold)
+
+    #         hyp_consecutive_triggers = int(np.ceil(det_window/buffer_size))
+
+            current_accuracies = []
+            for i, key in enumerate(waves):
+                
+                predictions, predictions_timestamps = streaming_classifier(
+                    waves[key],
+                    samprate,
+                    classifiers[classifier_label],
+                    classifier_params={"consec_seconds": consec_threshold, "ave_height": 25},
+                    input_buffer_size_sec = buffer_size_sec,
+                    classification_window_size_sec = 0.46,  #opt_det_window + 0.01
+                    detection_window_size_sec = 0.45,       #opt_det_window
+                    detection_window_offset_sec = 0.005,   #offset
+                    calibration_window_size_sec = 5,
+                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                    event_threshold_factor = 0.33,          #opt_thresh 
+                    flip_threshold = True, 
+                    consecutive_event_triggers = 3, 
+                    consecutive_nonevent_reset = 10,
+                    live = False,
+                )
+
+                actuals = "".join(labels[key].label)
+                lev_dist = my_lev_dist(predictions, actuals)
+                acc = max((len(actuals) - lev_dist), 0)/len(actuals)
+                current_accuracies.append(acc)
+            if consec_threshold in file_accuracies:
+                file_accuracies[consec_threshold] += current_accuracies
+            else:
+                file_accuracies[consec_threshold] = current_accuracies
+
+
+    ave_accuracies_per_consec_val = {}
+    for consec_thresh, acc_each_file_ls in file_accuracies.items():
+        ave_accuracies_per_consec_val[consec_thresh] = sum(acc_each_file_ls) / len(acc_each_file_ls)
+
+    print("done")
+
+    best_consecs = []
+    best_value = 0
+    for acc in ave_accuracies_per_consec_val.values():
+        if round(acc, 5) > round(best_value, 5):  #need to round because python maintains its floats very imprecisly
+            best_value = acc
+
+    for key, value in ave_accuracies_per_consec_val.items():
+        if round(value, 5) == round(best_value, 5):
+            best_consecs.append(key)
+
+    plt.figure(figsize=(10, 10))
+    plt.plot(ave_accuracies_per_consec_val.keys(), ave_accuracies_per_consec_val.values())
+    if len(best_consecs) > 1:
+        plt.vlines(best_consecs[0], 0, best_value, linestyle=":", label=f"Best Consecs: {round(best_consecs[0], 2)} to {round(best_consecs[len(best_consecs) - 1], 2)}, Accuracy = {round(best_value, 2)}")
+        plt.vlines(best_consecs[len(best_consecs) - 1], 0, best_value, linestyle=":")
+        plt.axvspan(best_consecs[0], best_consecs[len(best_consecs) - 1], alpha=0.1, color='red')
+    else:
+        plt.vlines(best_consecs[0], 0, best_value, linestyle=":", label=f"Best Consec: {round(best_consecs[0], 2)}, Accuracy = {round(best_value, 2)}")
+
+    plt.legend(loc = "lower right")
+    plt.ylabel("Weighted Levenshtein Accuracy")
+    plt.xlabel("'Consec' Threshold (in seconds)")
+    plt.title("Classifier Accuracy vs. Consec Threshold for Window Size of 0.46 Seconds")
+
+
+# The following code performs a grid search to optimise the `ave_height` threshold for the Max-Min-Range classifier. The `ave_height` threshold is varied from 0 to 6 in increments of 1, and the corresponding weighted Levenshtein accuracies are plotted. Note: we assume that the `consec_seconds` and `ave_height` are independent, which seems reasonable. This allows us to optimise them separately.
+
+# In[ ]:
+
+
+classifiers2 = {"Zeros": zeroes_classifier}
+
+file_accuracies = {}
+
+buffer_size_sec = 0.05
+if compute_all:
+    for classifier_label, classifier in classifiers2.items():
+        print(classifier_label)
+        for height_threshold in np.linspace(0, 100, 101):                                
+            print("\nCurrent Height Threshold:", height_threshold)
+
+    #         hyp_consecutive_triggers = int(np.ceil(det_window/buffer_size))
+
+            current_accuracies = []
+            for i, key in enumerate(waves):
+                
+                predictions, predictions_timestamps = streaming_classifier(
+                    waves[key],
+                    samprate,
+                    classifiers[classifier_label],
+                    classifier_params={"consec_seconds": 0.18, "ave_height": height_threshold},
+                    input_buffer_size_sec = buffer_size_sec,
+                    classification_window_size_sec = 0.46,   #opt_det_window + 0.01
+                    detection_window_size_sec = 0.45,        #opt_det_window
+                    detection_window_offset_sec = 0.005,   #offset
+                    calibration_window_size_sec = 5,
+                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                    event_threshold_factor = 0.33,          #opt_thresh 
+                    flip_threshold = True, 
+                    consecutive_event_triggers = 3, 
+                    consecutive_nonevent_reset = 10,
+                    live = False,
+                )
+
+                actuals = "".join(labels[key].label)
+                lev_dist = my_lev_dist(predictions, actuals)
+                acc = max((len(actuals) - lev_dist), 0)/len(actuals)
+                current_accuracies.append(acc)
+            if height_threshold in file_accuracies:
+                file_accuracies[height_threshold] += current_accuracies
+            else:
+                file_accuracies[height_threshold] = current_accuracies
+
+
+    ave_accuracies_per_height_val = {}
+    for height_thresh, acc_each_file_ls in file_accuracies.items():
+        ave_accuracies_per_height_val[height_thresh] = sum(acc_each_file_ls) / len(acc_each_file_ls)
+
+    print("done")
+
+    best_heights = []
+    best_value = 0
+    for acc in ave_accuracies_per_height_val.values():
+        if round(acc, 5) > round(best_value, 5):  #need to round because python maintains its floats very imprecisly
+            best_value = acc
+
+    for key, value in ave_accuracies_per_height_val.items():
+        if round(value, 5) == round(best_value, 5):
+            best_heights.append(key)
+
+    plt.figure(figsize=(10, 10))
+    plt.plot(ave_accuracies_per_height_val.keys(), ave_accuracies_per_height_val.values())
+    if len(best_heights) > 1:
+        plt.vlines(
+            best_heights[0], 0, best_value, linestyle=":", 
+            label="Best Heights: {} to {}, Accuracy = {}".format([round(best_heights[0], 2),
+                                                                  round(best_heights[len(best_heights) - 1], 2),
+                                                                  round(best_value, 2)]))
+        plt.vlines(best_heights[len(best_heights) - 1], 0, best_value, linestyle=":")
+        plt.axvspan(best_heights[0], best_heights[len(best_heights) - 1], alpha=0.1, color='red')
+    else:
+        plt.vlines(
+            best_heights[0], 0, best_value, linestyle=":", 
+            label="Best Height: {}, Accuracy = {}".format([round(best_heights[0], 2),
+                                                                  round(best_value, 2)]))
+
+
+    plt.legend(loc = "lower right")
+    plt.ylabel("Weighted Levenshtein Accuracy")
+    plt.xlabel("'Height' Threshold")
+    plt.title("Classifier Accuracy vs. Height Threshold for Window Size of 0.46 Seconds")
+
+
 # ## References 
 # 
-# {cite}`VR`
-# {cite}`SpaceInvaders`
-# {cite}`BYB`
+# {cite}`numpy`
+# {cite}`pandas`
+# {cite}`scipy`
+# {cite}`plot`
+# {cite}`catch22`
+# {cite}`sklearn`
+# {cite}`numba`
+# {cite}`levdist`
+# {cite}`serial`
 
 # ```{bibliography}
 # ```
