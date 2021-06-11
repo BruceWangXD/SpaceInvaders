@@ -198,7 +198,7 @@
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#physical-experiments-performed-findings">
-     Physical experiments performed &amp; Findings
+     Physical Experiments Performed &amp; Findings
     </a>
     <ul class="nav section-nav flex-column">
      <li class="toc-h4 nav-item toc-entry">
@@ -218,17 +218,17 @@
      </li>
      <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#electrode-placement">
-       Electrode Placement
+       Electrode placement
       </a>
      </li>
      <li class="toc-h4 nav-item toc-entry">
       <a class="reference internal nav-link" href="#changing-individual-changing-boxes">
-       Changing Individual &amp; Changing Boxes
+       Changing individual &amp; changing boxes
       </a>
      </li>
      <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#determining-how-the-signal-changes-with-natural-movement">
-       Determining how the signal changes with natural Movement
+      <a class="reference internal nav-link" href="#determining-how-the-signal-changes-with-natural-movements">
+       Determining how the signal changes with natural movements
       </a>
      </li>
     </ul>
@@ -364,9 +364,9 @@
 <div class="section" id="executive-summary">
 <h2>Executive Summary<a class="headerlink" href="#executive-summary" title="Permalink to this headline">¶</a></h2>
 <p>Technological advancements such as gesture control, voice recognition, virtual and augmented reality are redefining gaming, advancing an already booming and competitive industry. The project detailed in this report is a redesigned version of Space Invaders, with the ship controlled using gestures, specifically left and right eye movements. Its development is motivated by the financial success of similarly advanced games such as Pokemon Go and without doubt, the original Space Invaders which was a technological wonder for its time.</p>
-<p><a class="reference internal" href="#flow"><span class="std std-numref">Fig. 1</span></a> is a workflow diagram which illustrates the process undergone in the development of the product and how the Physics and Data Science disciplines worked as one unit. After performing a plethora of experiments, it was found that having the electrodes at least 3cm apart, performing fast eye movements and placing left and right markers for the user, generated a clean, noticeable, signal. Additionally, collecting data from all team members gave enough variation in the data to ensure our classifier is robust and general.</p>
-<p>Determining the event detection statistic that best distinguishes between regions of events and non-events involved evaluating the relationship between window size and contrast between the detection metric of said regions. The best performing detection method was found to be zero-crossings; the number of times the signal crosses the zero point (x-axis) per second, with an optimal window length of 0.35s.</p>
-<p>Similarly, determining the optimal classifier involved evaluating the relationship between window size and accuracy of the classifier. The most robust classifier was found to be the ‘one extrema classifier’ with 96% accuracy and optimal window size of 0.65s. This classifier smooths the signal using a savitzky-golay filter, then determines if the first turning point is a minimum or maximum. The time taken to execute each classifier (except for KNN) is negligible and thus did not contribute to our choice of classifier.</p>
+<p><a class="reference internal" href="#flow"><span class="std std-numref">Fig. 1</span></a> is a workflow diagram which illustrates the process undergone in the development of the product and how the Physics and Data Science disciplines worked as one unit. After performing a plethora of experiments, it was found that having the electrodes at least 3cm apart, performing fast eye movements and placing left and right markers for the user, generated a clean, noticeable signal. Additionally, collecting data from all team members gave enough variation in the data to ensure our classifier is robust and general.</p>
+<p>Determining the event detection statistic that best distinguishes between regions of events and non-events involved evaluating the relationship between window size and contrast between the detection metric of said regions. The best performing detection method was found to be zero-crossings; the number of times the signal crosses origin per second, with an optimal detection window length of 0.35s.</p>
+<p>Similarly, determining the optimal classifier involved evaluating the relationship between window size and accuracy of the classifier. The most accurate and latent classifier was found to be the ‘Max-Min-Range’ classification rule with 96% accuracy and requiring no extension on the detection window. This classifier smooths the signal using a savitzky-golay filter, then determines if the first turning point is a minimum or maximum. The time taken to execute each classifier (except for KNN) is negligible and thus did not contribute to our choice of classifier.</p>
 <p>Re-designing Space Invaders to be controlled using left and right eye movements is not solely useful as an entertaining game with potential commercial success. It is a tool that can act as a learning interface to teach individuals how gesture control performs (as the technology is inevitably integrated into our everyday lives) by using a familiar, nostalgic game such as space invaders. Additional applications include inclusive gaming for those with muscular impairments and building a foundation model for future projects to extend.</p>
 <div class="section" id="dependencies">
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
@@ -382,6 +382,7 @@
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">catch22</span> <span class="kn">import</span> <span class="n">catch22_all</span>
+<span class="kn">import</span> <span class="nn">catch22</span>
 <span class="kn">from</span> <span class="nn">sklearn.tree</span> <span class="kn">import</span> <span class="n">DecisionTreeClassifier</span>
 <span class="kn">from</span> <span class="nn">sklearn.feature_selection</span> <span class="kn">import</span> <span class="n">RFECV</span>
 <span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
@@ -397,7 +398,7 @@
 <span class="c1"># To run all computation, change to True. Otherwise, precomputed files will be loaded instead.</span>
 <span class="n">compute_all</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="c1"># If running, ensure the following line is commented out. It disables plots for knitting to html purposes. </span>
-<span class="o">%</span><span class="k">matplotlib</span> agg
+<span class="c1"># %matplotlib agg</span>
 
 <span class="c1"># Set seed for reproducibility</span>
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">420</span><span class="p">)</span> 
@@ -415,56 +416,57 @@
 </div>
 <div class="section" id="motivation-background">
 <h2>Motivation &amp; Background<a class="headerlink" href="#motivation-background" title="Permalink to this headline">¶</a></h2>
-<p>Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over $21 billion alone <span id="id1">[<a class="reference internal" href="#id8">VR21</a>]</span>, the gaming industry is evidently undergoing a similar transformation. Such financial success is reason enough to design and implement a game that is similarly controlled by one of these technological advancements. This project involves using gesture control, an instance of one of these technological advancements, to re-develop Space Invaders, the iconic 80’s game which grossed an equivalent of $13 billion <span id="id2">[<a class="reference internal" href="#id9">con21</a>]</span>.</p>
-<p>Our desired product is the nostalgic game of Space Invaders, with the spaceship  alternatively controlled by left and right eye movements. These movements are represented by signals generated by the Backyard Brains Spiker Box <span id="id3">[<a class="reference internal" href="#id10">BYB</a>]</span>. The creation of such a game is motivated by the financial success of games such as Pokemon Go which used augmented reality to re-develop the themes and goals of the popular video game series, Pokemon. Our target market is anyone interested in leading technologies and gaming, akin to PokemonGo’s and the original Space Invaders audience. A short survey was conducted and out of 33 people, 85% said they would be interested in this version of Space Invaders. This demonstrates potential commercial success with a remastered launch.</p>
-<p>The fundamental aim of this project is to accurately and efficiently detect eye movements, and distinguish between left and right signals. This becomes an arduous task if solely Physics or Data Science is used to implement this project. By integrating these disciplines, the task. The workflow diagram in <a class="reference internal" href="#flow"><span class="std std-numref">Fig. 1</span></a> visually explains the role of each discipline, and how the success of the final product depends on the integration of these sciences. In particular, the Physics discipline is responsible for the experimental design and collection of data, to generate a clean, noticeable signal that is representative of a larger group of people. The Data Science discipline is responsible for implementing code that reads this data, searches for the occurrence of a movement and classifies the specific gesture. Additionally, the integrated knowledge and skills of the Physics and Data Science disciplines led to designing and implementing a method that evaluates the performance of the code in terms of accuracy and efficiency of detection and classification.</p>
+<p>Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over $21 billion alone <span id="id1">[<a class="reference internal" href="#id8">VR21</a>]</span>, the gaming industry is evidently undergoing a similar transformation. The financial success of other games such as Pokemon Go, which used augmented reality to re-develop the themes and goals of its franchise, is reason enough to design and implement a game that is similarly controlled by one of these technological advancements.</p>
+<p>This project involves using gesture control, one of these technological advancements, to re-develop Space Invaders, the iconic 80’s game which grossed an equivalent of $13 billion <span id="id2">[<a class="reference internal" href="#id9">con21</a>]</span>, using left and right eye movements as the spaceship’s controls. These movements are represented by signals generated by the Backyard Brains Spikerbox <span id="id3">[<a class="reference internal" href="#id10">BYB</a>]</span>.</p>
+<p>Our target market is anyone interested in leading technologies and gaming, akin to Pokemon Go’s and the original Space Invaders audience. A short survey was conducted and out of 33 people, 85% said they would be interested in this version of Space Invaders. This demonstrates potential commercial success with a remastered launch.</p>
+<p>The fundamental aim of this project is to accurately and efficiently detect eye movements, and distinguish between left and right signals. This becomes an arduous task if solely Physics or Data Science is used to implement this project. The workflow diagram in <a class="reference internal" href="#flow"><span class="std std-numref">Fig. 1</span></a> visually explains the role of each discipline, and how the success of the final product depends on the integration of these sciences. In particular, the Physics discipline is responsible for the experimental design and collection of data, to generate a clean, noticeable signal that is representative of a larger population. The Data Science discipline is responsible for implementing code that reads this data, searches for the occurrence of a movement and classifies the specific gesture. Additionally, the integrated knowledge and skills of the two disciplines led to designing and implementing a method that evaluates the performance of the detection and classification code in terms of accuracy and efficiency.</p>
 <p>Thus, using the skills and knowledge of Physics and Data Science, a well-tested gesture controlled version of Space invaders can be developed.</p>
 <div class="figure align-default" id="flow">
 <a class="reference internal image-reference" href="_images/flow.png"><img alt="_images/flow.png" src="_images/flow.png" style="width: 708.9px; height: 911.4px;" /></a>
-<p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Workflow diagram illustrating the process undergone by both Physics and Data Science disciplines in the re-developemnt of the game Space Invaders.</span><a class="headerlink" href="#flow" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Workflow diagram illustrating the process undergone by both Physics and Data Science disciplines in the re-development of the game Space Invaders.</span><a class="headerlink" href="#flow" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`flow` --></div>
 <div class="section" id="experimentation-data-collection">
 <h2>Experimentation &amp; Data Collection<a class="headerlink" href="#experimentation-data-collection" title="Permalink to this headline">¶</a></h2>
 <p>In reference to <a class="reference internal" href="#flow"><span class="std std-numref">Fig. 1</span></a>, the first step in the re-development of Space Invaders requires experimenting with the Spikerbox to collect data which is representative application of the game. The aim of experimentation is to define characteristic signal signatures (such as left and right eye movements) and determine how these change as physical aspects of the experimental design vary.</p>
 <div class="section" id="physical-experiments-performed-findings">
-<h3>Physical experiments performed &amp; Findings<a class="headerlink" href="#physical-experiments-performed-findings" title="Permalink to this headline">¶</a></h3>
+<h3>Physical Experiments Performed &amp; Findings<a class="headerlink" href="#physical-experiments-performed-findings" title="Permalink to this headline">¶</a></h3>
 <p>The following sections detail the plethora of experiments performed and specifically what each test was exploring.</p>
 <div class="section" id="general-eye-movements">
 <h4>General eye movements<a class="headerlink" href="#general-eye-movements" title="Permalink to this headline">¶</a></h4>
-<p>The first experiment is to determine if distinguishing between left and right eye movements is possible. Two electrodes were placed above the eyebrow of a team members eye and they were instructed to look forward. Then, the team member moved their eyes from the middle position, to the left or right, then immediately back to the middle-position.  (insert figure reference to signal graph) illustrates that while the signal shape of left and right eye movements appears the same, the polarity of the signals is inverted.</p>
+<p>The first experiment is to determine if distinguishing between left and right eye movements is possible. Two electrodes were placed above the eyebrow of a team members eye and they were instructed to look forward. Then, the team member moved their eyes left or right, then immediately back to the middle.  (insert figure reference to signal graph) illustrates that while the signal shape of left and right eye movements appears the same, the polarity of the signals is inverted.</p>
 </div>
 <div class="section" id="varying-speed-of-eye-movements">
 <h4>Varying speed of eye movements<a class="headerlink" href="#varying-speed-of-eye-movements" title="Permalink to this headline">¶</a></h4>
-<p>With the same experimental set up, the team member is now instructed to vary the speed at which they look towards the left or right. It was found that when eye movements were too slow, the signal associated with looking from middle to the left became separated from that when looking from the left back to the middle. In fact, the differences between the signals had the same shape yet opposing polarity, much like that in the first experiment. However, with fast eye-movements, these two separate signals became one, yielding the same output as the first experiment.</p>
+<p>The team member is now instructed to vary the speed at which they look left or right. It was found that when eye movements were too slow, the signal associated with looking from the middle to the left and looking from the left back to the middle became separated. However, with fast eye-movements, these two separate signals became one, yielding the same output as before.</p>
 </div>
 <div class="section" id="varying-distance-of-eye-movements">
 <h4>Varying distance of eye movements<a class="headerlink" href="#varying-distance-of-eye-movements" title="Permalink to this headline">¶</a></h4>
-<p>Now, the team member was asked to perform normal left-middle and right-middle eye movements such as in the first experiment, however, with each iteration they must look slightly further away from the middle position. The design of this experiment involved placing objects equally distant apart which acted as targets to look. It was found that if the eyes movement a small distance away from the middle position, a signal was barely detecable. This distance was not quantified, as we will see it is completely dependent on the individual performing the experiment. As the eyes moved further away from the beggining position, the amplitude of the signal grew accordingly.</p>
+<p>Now, the team member is asked to perform normal left-middle and right-middle eye movements, but with each iteration they must look further away from the middle position. This involved placing objects equally apart, acting as targets to look at. It was found that if the eye moved slightly away from the middle, a signal was barely detectable. This distance was not quantified, as it is dependent on the individual performing the experiment. As the eyes moved further away from the centre, the amplitude of the signal grew accordingly.</p>
 </div>
 <div class="section" id="electrode-placement">
-<h4>Electrode Placement<a class="headerlink" href="#electrode-placement" title="Permalink to this headline">¶</a></h4>
-<p>The only experimental feature that is now different to the original experiment is the configuration of the electrode placements. It was found that placing the electrode vertically across tehe eye as opposed to horizontally no longer generates a distinguishabel signal for aleft and right eye movements. Instead, the best movement associated with this placement is up and down.</p>
-<p>Additionally, altering the distance between the electrode placement was tested about found that electrodes placed much closer than arounf 3cm to each other failed to generate a noticable, distinguishable signal with left and right eye movements.</p>
+<h4>Electrode placement<a class="headerlink" href="#electrode-placement" title="Permalink to this headline">¶</a></h4>
+<p>We now experiment with the configuration of the electrode placements. It was found that placing the electrode vertically across the eye as opposed to horizontally no longer generates a distinguishable signal for left and right eye movements. Instead, the best movement associated with this placement is up and down.</p>
+<p>Additionally, it was found that altering the distance between the electrodes to be closer than around 3cm to each other failed to generate a noticeable, distinguishable signal with left and right eye movements.</p>
 </div>
 <div class="section" id="changing-individual-changing-boxes">
-<h4>Changing Individual &amp; Changing Boxes<a class="headerlink" href="#changing-individual-changing-boxes" title="Permalink to this headline">¶</a></h4>
-<p>As experimental equipment was swapped, such as the SpikerBox itself, electrodes and connecting wires, or there there is a new team member collecting the data, the dignal generated was subject to change. Such changes included variation in noise, signal amplitude and in worst cases a completely different signal signature in general.</p>
+<h4>Changing individual &amp; changing boxes<a class="headerlink" href="#changing-individual-changing-boxes" title="Permalink to this headline">¶</a></h4>
+<p>As experimental equipment was swapped, such as the Spikerbox itself, electrodes and connecting wires, or a new team member collecting the data, the signal generated was subject to change. Such changes included variation in noise, signal amplitude and in worst cases a completely different signal signature.</p>
 </div>
-<div class="section" id="determining-how-the-signal-changes-with-natural-movement">
-<h4>Determining how the signal changes with natural Movement<a class="headerlink" href="#determining-how-the-signal-changes-with-natural-movement" title="Permalink to this headline">¶</a></h4>
-<p>Using the same experimental set up as the first experiment, the user was asked to sit still and blink naturally, then move their face (smile, raise tehir eyebrows, shake their head, scrunch their nose etc.). Occasionally the blinks were small, detectable peaks in the signal. Whereas movement of the muscles in their face cause a dramatic increase in noise and sometimes amplitude.</p>
+<div class="section" id="determining-how-the-signal-changes-with-natural-movements">
+<h4>Determining how the signal changes with natural movements<a class="headerlink" href="#determining-how-the-signal-changes-with-natural-movements" title="Permalink to this headline">¶</a></h4>
+<p>The user is now asked to sit still and blink naturally, then move their face (smile, raise their eyebrows, shake their head, scrunch their nose, etc.). The blinks were small, detectable peaks in the signal, whereas movement of the muscles in their face cause a dramatic increase in noise and sometimes amplitude.</p>
 </div>
 </div>
 <div class="section" id="immediate-implications-of-findings">
 <h3>Immediate Implications of Findings<a class="headerlink" href="#immediate-implications-of-findings" title="Permalink to this headline">¶</a></h3>
-<p>From our above findings, we can immediately adapt the final experimental design to ensure the cleanest and most noticable signal is generated.</p>
+<p>From our above findings, we can immediately adapt the final experimental design to ensure the cleanest and most noticeable signal is generated.</p>
 <ul class="simple">
-<li><p>Throughout the rest of the experiment data was collected by placing the electrodes at least 3cm apart in a horizontal configuration above the eyebrow.</p></li>
-<li><p>The speed the user moves their eyes are fast, however, these movements are separated by minimum time intervals to prevent merging the signals.</p></li>
-<li><p>Throughout data collection, markers were placed on the left and right of the user to act as a target, ensuring they move their eyes far enough to generate a strong signal.</p></li>
-<li><p>Data was collected from more than one individual to ensure the dataset it representative of a larger group.</p></li>
-<li><p>To overcome the issue due to noise it would be appropriate duing pre-processing to use a noise filter.</p></li>
+<li><p>Throughout the rest of the experiment, data was collected by placing the electrodes at least 3cm apart in a horizontal configuration above the eyebrow.</p></li>
+<li><p>The user was instructed to move their eyes quickly. However, these movements are separated by minimum time intervals to prevent merging the signals.</p></li>
+<li><p>Throughout data collection, markers were placed on the left and right of the user to act as a target, ensuring they moved their eyes far enough to generate a strong signal.</p></li>
+<li><p>Data was collected from more than one individual to ensure the dataset is representative of a larger group.</p></li>
+<li><p>To overcome the issue due to noise, it would be appropriate during pre-processing to use a noise filter.</p></li>
 <li><p>To overcome the issue due to changing signal amplitude, pre-processing of the signal should additionally involve normalisation or calibration.</p></li>
 </ul>
 </div>
@@ -481,7 +483,7 @@
 <p>Two of the eight files were randomly selected as the test set, and the rest were assigned to the training set.</p>
 <div class="cell tag_hide-input tag_hide-output docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">fnames</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">):</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">fnames</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">,</span> <span class="n">fix_alessandro</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">offsets</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">waves</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">labels</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">fnames</span><span class="p">:</span>
@@ -489,7 +491,18 @@
         <span class="n">samprate</span><span class="p">,</span> <span class="n">wav_array</span> <span class="o">=</span> <span class="n">wavfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">file</span><span class="o">+</span><span class="s2">&quot;.wav&quot;</span><span class="p">)</span>
         <span class="n">wav_array</span> <span class="o">=</span> <span class="n">wav_array</span><span class="o">*</span><span class="n">scale_factor</span>
         <span class="n">wav_array</span> <span class="o">+=</span> <span class="n">shift_factor</span>
-        <span class="n">waves</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="n">wav_array</span>
+        <span class="c1"># Fix the bug in alessandro&#39;s code</span>
+        <span class="k">if</span> <span class="n">fix_alessandro</span><span class="p">:</span>
+            <span class="n">fixed_wav</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="mi">999</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="n">file</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">wav_array</span><span class="p">)</span><span class="o">-</span><span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">fixed_wav</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">wav_array</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">]))</span>
+                <span class="n">fixed_wav</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">wav_array</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">step</span><span class="p">]))</span>
+            <span class="n">waves</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">fixed_wav</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">waves</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="n">wav_array</span>
         <span class="c1"># Load in label file</span>
         <span class="n">labels_dat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="o">+</span><span class="n">file</span><span class="o">+</span><span class="s2">&quot;.txt&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">labels_dat</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">]</span>
@@ -501,19 +514,30 @@
 
 <span class="n">fnames</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">,</span> <span class="s2">&quot;data3&quot;</span><span class="p">,</span> <span class="s2">&quot;data4&quot;</span><span class="p">,</span> <span class="s2">&quot;data5&quot;</span><span class="p">,</span> <span class="s2">&quot;data6&quot;</span><span class="p">,</span> <span class="s2">&quot;data7&quot;</span><span class="p">,</span> <span class="s2">&quot;data8&quot;</span><span class="p">]</span>
 
+<span class="c1"># Offsets to fix the error in alessandro&#39;s code</span>
+<span class="n">offsets</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+           <span class="s2">&quot;data2&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+           <span class="s2">&quot;data3&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+           <span class="s2">&quot;data4&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+           <span class="s2">&quot;data5&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span>
+           <span class="s2">&quot;data6&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+           <span class="s2">&quot;data7&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+           <span class="s2">&quot;data8&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+
 <span class="c1"># Randomly select two files for the test set, remainder as training</span>
 <span class="n">test_files</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">fnames</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">training_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fnames</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">test_files</span><span class="p">))</span>
 
 <span class="c1"># Training Data</span>
 <span class="n">waves</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span>
-    <span class="n">IN_PATH</span><span class="p">,</span> <span class="n">training_files</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">IN_PATH</span><span class="p">,</span> <span class="n">training_files</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">,</span> <span class="n">fix_alessandro</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offsets</span><span class="o">=</span><span class="n">offsets</span><span class="p">)</span>
 
 <span class="c1"># Test Data</span>
 <span class="n">test_waves</span><span class="p">,</span> <span class="n">test_labels</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span>
-    <span class="n">IN_PATH</span><span class="p">,</span> <span class="n">test_files</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">IN_PATH</span><span class="p">,</span> <span class="n">test_files</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">,</span> <span class="n">fix_alessandro</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offsets</span><span class="o">=</span><span class="n">offsets</span><span class="p">)</span>
 
-<span class="c1"># Define Sample Rate: 10,000 Hz</span>
+<span class="c1"># Define Calibration Window and Sample Rate: 10,000 Hz</span>
+<span class="n">calibration_window_sec</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">samprate</span> <span class="o">=</span> <span class="mi">10_000</span>
 </pre></div>
 </div>
@@ -612,7 +636,7 @@ data7
         <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>                <span class="c1"># Threshold is a lower bound if true, upper bound if false</span>
         <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>        <span class="c1"># How many threshold triggers need to occur in a row for an </span>
                                                    <span class="c1"># event to be called</span>
-        <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">1</span>         <span class="c1"># How many threshold failures need to occur in a row for the</span>
+        <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="mi">10</span>         <span class="c1"># How many threshold failures need to occur in a row for the</span>
                                                    <span class="c1"># classifier to be primed for a new event</span>
         <span class="p">):</span>
 
@@ -933,9 +957,12 @@ data7
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<img alt="_images/Reproducible_Report_28_0.png" src="_images/Reproducible_Report_28_0.png" />
+</div>
 </div>
 <div class="figure align-default" id="contrast">
-<a class="reference internal image-reference" href="_images/contrast.png"><img alt="_images/contrast.png" src="_images/contrast.png" style="width: 525.0px; height: 525.0px;" /></a>
+<a class="reference internal image-reference" href="_images/contrast.png"><img alt="_images/contrast.png" src="_images/contrast.png" style="width: 378.0px; height: 378.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 2 </span><span class="caption-text">Contrast of each test statistic as a function of window size. We can see that zero crossings produces the maximum contrast at a window length of 0.35 seconds.</span><a class="headerlink" href="#contrast" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`contrast` --></div>
@@ -948,7 +975,6 @@ data7
 
 <span class="k">if</span> <span class="n">compute_all</span><span class="p">:</span>
     <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_thresh_opt</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c1"># Clear file</span>
-    <span class="n">calibration_window_sec</span> <span class="o">=</span> <span class="mi">5</span>
     <span class="k">for</span> <span class="n">st_scale</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
         <span class="n">fps</span><span class="p">,</span> <span class="n">fns</span><span class="p">,</span> <span class="n">tps</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -960,7 +986,7 @@ data7
                 <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
                 <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
                 <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="n">calibration_window_sec</span><span class="p">,</span>
                 <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                 <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
                 <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">st_scale</span><span class="p">,</span> 
@@ -1019,9 +1045,12 @@ data7
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<img alt="_images/Reproducible_Report_32_0.png" src="_images/Reproducible_Report_32_0.png" />
+</div>
 </div>
 <div class="figure align-default" id="threshold">
-<a class="reference internal image-reference" href="_images/threshold.png"><img alt="_images/threshold.png" src="_images/threshold.png" style="width: 525.0px; height: 525.0px;" /></a>
+<a class="reference internal image-reference" href="_images/threshold.png"><img alt="_images/threshold.png" src="_images/threshold.png" style="width: 378.0px; height: 378.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 3 </span><span class="caption-text">Plot of the F score for different threshold factors on the training set. The threshold is obtained by multiplying the zero crossings of the calibration window (normalised by the length of the window) by the threshold factor. We find the highest F score occurs when the threshold factor is 0.27.</span><a class="headerlink" href="#threshold" title="Permalink to this image">¶</a></p>
 </div>
 <!-- reference by {numref}`threshold` --></div>
@@ -1322,7 +1351,7 @@ data7
                     <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">classification_window</span><span class="p">,</span>
                     <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
                     <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">w</span><span class="p">,</span>
-                    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="n">calibration_window_sec</span><span class="p">,</span>
                     <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                     <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
                     <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
@@ -1336,7 +1365,6 @@ data7
                 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                     <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">classifier_label</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">classification_window</span><span class="p">),</span> 
                                          <span class="n">key</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">lev_dist</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">acc</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
                     
 <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_filename_cls_opt</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="n">results</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span> <span class="s2">&quot;window_size&quot;</span><span class="p">,</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="s2">&quot;predicted&quot;</span><span class="p">,</span> <span class="s2">&quot;actual&quot;</span><span class="p">,</span> <span class="s2">&quot;lev_dist&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">]</span>
@@ -1377,9 +1405,12 @@ data7
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<img alt="_images/Reproducible_Report_42_0.png" src="_images/Reproducible_Report_42_0.png" />
+</div>
 </div>
 <div class="figure align-default" id="classifier">
-<a class="reference internal image-reference" href="_images/classifier.png"><img alt="_images/classifier.png" src="_images/classifier.png" style="width: 525.0px; height: 525.0px;" /></a>
+<a class="reference internal image-reference" href="_images/classifier.png"><img alt="_images/classifier.png" src="_images/classifier.png" style="width: 378.0px; height: 378.0px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 4 </span><span class="caption-text">Training accuracy of each classifier as a function of classification window length. The classification window is lower bounded by the detection window, represented by the shaded region.
 Ideally, we want to minimise window length while maximising accuracy. With this in mind, we see that the Max-Min-Range classifier has the highest accuracy at a window length equal to be the lowerbound of 0.35 seconds. This makes it the most optimal classifier by both accuracy and latency.</span><a class="headerlink" href="#classifier" title="Permalink to this image">¶</a></p>
 </div>
@@ -1407,7 +1438,7 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
                 <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
                 <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
                 <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">offset</span><span class="p">,</span>
-                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="n">calibration_window_sec</span><span class="p">,</span>
                 <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
                 <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
                 <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
@@ -1471,33 +1502,33 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
   <tbody>
     <tr>
       <th>data5</th>
-      <td>0.787037</td>
+      <td>0.740741</td>
       <td>0.925926</td>
       <td>0.925926</td>
-      <td>0.574074</td>
+      <td>0.611111</td>
+      <td>0.907407</td>
+      <td>0.703704</td>
       <td>0.925926</td>
-      <td>0.666667</td>
-      <td>0.888889</td>
     </tr>
     <tr>
       <th>data7</th>
-      <td>0.750000</td>
+      <td>0.709677</td>
       <td>0.870968</td>
       <td>0.870968</td>
-      <td>0.677419</td>
+      <td>0.709677</td>
+      <td>0.790323</td>
+      <td>0.701613</td>
       <td>0.870968</td>
-      <td>0.596774</td>
-      <td>0.838710</td>
     </tr>
     <tr>
       <th>Total</th>
-      <td>0.768519</td>
+      <td>0.725209</td>
       <td>0.898447</td>
       <td>0.898447</td>
-      <td>0.625747</td>
+      <td>0.660394</td>
+      <td>0.848865</td>
+      <td>0.702658</td>
       <td>0.898447</td>
-      <td>0.631720</td>
-      <td>0.863799</td>
     </tr>
   </tbody>
 </table>
@@ -1592,7 +1623,7 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
                      <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Calibration&quot;</span><span class="p">,</span>
                      <span class="n">alpha</span><span class="o">=</span><span class="n">shade_alpha</span><span class="p">)</span>
     <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-    
+        
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
@@ -1611,6 +1642,9 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
 <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">OUT_PATH</span> <span class="o">+</span> <span class="s2">&quot;dataset_plot.png&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/Reproducible_Report_56_0.png" src="_images/Reproducible_Report_56_0.png" />
 </div>
 </div>
 <div class="cell tag_hide-input tag_remove-output docutils container">
@@ -1637,7 +1671,7 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
     <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">optimal_cl_windows</span><span class="p">[</span><span class="n">classifier_label</span><span class="p">],</span>
     <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
     <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="n">offset</span><span class="p">,</span>
-    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="n">calibration_window_sec</span><span class="p">,</span>
     <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
     <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
     <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="n">opt_thresh</span><span class="p">,</span> 
@@ -1652,6 +1686,8 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
 </div>
 </div>
 </div>
+<p>Below is the code used to perform feature selection on the features calculated using catch22 for the kNN classifier. An external set of data was used to determine these features as to not bias the optimisation process undertaken in 4.2.3.
+This feature data was saved to <code class="docutils literal notranslate"><span class="pre">catch22_step_selected_features.csv</span></code> for use in the kNN classifier.</p>
 <div class="cell tag_hide-input tag_remove-output docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using backward stepwise feature selection from catch22 for kNN classifier </span>
@@ -1666,7 +1702,7 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
 
 <span class="c1"># Load the data</span>
 <span class="n">knn_waves</span><span class="p">,</span> <span class="n">knn_labels</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span>
-    <span class="n">KNN_DATA_PATH</span><span class="p">,</span> <span class="n">knn_names</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">KNN_DATA_PATH</span><span class="p">,</span> <span class="n">knn_names</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shift_factor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">512</span><span class="p">,</span> <span class="n">fix_alessandro</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># Define sample rate: 10,000 Hz</span>
 <span class="n">samprate</span> <span class="o">=</span> <span class="mi">10_000</span>
@@ -1716,6 +1752,64 @@ Ideally, we want to minimise window length while maximising accuracy. With this 
 <span class="n">selected_features_df</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_labels</span>
 
 <span class="c1"># selected_features_df.to_csv(DEP_PATH+&#39;catch22_step_selected_features.csv&#39;,index=False)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell tag_hide-input tag_hide-output docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Gridsearch to optimise consecutive_event_triggers and consecutive_nonevent_reset</span>
+<span class="c1"># Chose minimum pair with optimal f score of 0.993 - (3, 10). A minimum pair minimises latency</span>
+<span class="k">if</span> <span class="n">compute_all</span><span class="p">:</span>
+    <span class="n">trigset</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">trigs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">25</span><span class="p">):</span>
+            <span class="n">fscores</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">fps</span><span class="p">,</span> <span class="n">fns</span><span class="p">,</span> <span class="n">tps</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="n">predictions</span><span class="p">,</span> <span class="n">predictions_timestamps</span> <span class="o">=</span> <span class="n">streaming_classifier</span><span class="p">(</span>
+                    <span class="n">waves</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                    <span class="n">samprate</span><span class="p">,</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="s2">&quot;R&quot;</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span> <span class="k">else</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span>
+                    <span class="n">input_buffer_size_sec</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+                    <span class="n">classification_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
+                    <span class="n">detection_window_size_sec</span> <span class="o">=</span> <span class="n">opt_det_window</span><span class="p">,</span>
+                    <span class="n">detection_window_offset_sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="n">calibration_window_size_sec</span> <span class="o">=</span> <span class="n">calibration_window_sec</span><span class="p">,</span>
+                    <span class="n">calibration_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                    <span class="n">event_test_statistic_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ts_zero_crossings</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> 
+                    <span class="n">event_threshold_factor</span> <span class="o">=</span> <span class="mf">0.33</span><span class="p">,</span> 
+                    <span class="n">flip_threshold</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+                    <span class="n">consecutive_event_triggers</span> <span class="o">=</span> <span class="n">trigs</span><span class="p">,</span> 
+                    <span class="n">consecutive_nonevent_reset</span> <span class="o">=</span> <span class="n">reset</span>
+                <span class="p">)</span>
+                <span class="n">before_buffer</span> <span class="o">=</span> <span class="n">time_buffers_hump</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">after_buffer</span> <span class="o">=</span> <span class="n">time_buffers_hump</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">actual_times</span> <span class="o">=</span> <span class="p">[(</span><span class="n">time</span><span class="o">-</span><span class="n">before_buffer</span><span class="p">,</span> <span class="n">time</span><span class="o">+</span><span class="n">after_buffer</span><span class="p">)</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">]</span>
+                <span class="n">actual_leftovers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">actual_times</span><span class="p">)</span>
+                <span class="n">pred_leftovers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">predictions_timestamps</span><span class="p">)</span>
+                <span class="n">tps</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_times</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">act_times</span> <span class="ow">in</span> <span class="n">actual_times</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">act_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">calibration_window_sec</span><span class="p">:</span>
+                        <span class="n">actual_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">act_times</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="k">for</span> <span class="n">pred_times</span> <span class="ow">in</span> <span class="n">predictions_timestamps</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">act_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pred_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">act_times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">pred_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span>
+                            <span class="n">pred_times</span> <span class="ow">in</span> <span class="n">pred_leftovers</span> <span class="ow">and</span> <span class="n">act_times</span> <span class="ow">in</span> <span class="n">actual_leftovers</span><span class="p">):</span>
+                            <span class="n">actual_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">act_times</span><span class="p">)</span>
+                            <span class="n">pred_leftovers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pred_times</span><span class="p">)</span>
+                <span class="n">tps</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_leftovers</span><span class="p">)</span>
+                <span class="n">fns</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actual_leftovers</span><span class="p">)</span>
+                <span class="n">fps</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred_leftovers</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">fscore</span> <span class="o">=</span> <span class="n">tps</span><span class="o">/</span><span class="p">(</span><span class="n">tps</span><span class="o">+</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fns</span><span class="o">+</span><span class="n">fps</span><span class="p">))</span>
+                <span class="n">fscores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fscore</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">trigs</span><span class="p">,</span> <span class="n">reset</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fscores</span><span class="p">))</span>
+            <span class="n">trigset</span><span class="p">[(</span><span class="n">trigs</span><span class="p">,</span> <span class="n">reset</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fscores</span><span class="p">)</span>
+
+
+        
+        
 </pre></div>
 </div>
 </div>

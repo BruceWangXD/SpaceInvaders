@@ -7,11 +7,11 @@
 
 # Technological advancements such as gesture control, voice recognition, virtual and augmented reality are redefining gaming, advancing an already booming and competitive industry. The project detailed in this report is a redesigned version of Space Invaders, with the ship controlled using gestures, specifically left and right eye movements. Its development is motivated by the financial success of similarly advanced games such as Pokemon Go and without doubt, the original Space Invaders which was a technological wonder for its time. 
 # 
-# {numref}`flow` is a workflow diagram which illustrates the process undergone in the development of the product and how the Physics and Data Science disciplines worked as one unit. After performing a plethora of experiments, it was found that having the electrodes at least 3cm apart, performing fast eye movements and placing left and right markers for the user, generated a clean, noticeable, signal. Additionally, collecting data from all team members gave enough variation in the data to ensure our classifier is robust and general. 
+# {numref}`flow` is a workflow diagram which illustrates the process undergone in the development of the product and how the Physics and Data Science disciplines worked as one unit. After performing a plethora of experiments, it was found that having the electrodes at least 3cm apart, performing fast eye movements and placing left and right markers for the user, generated a clean, noticeable signal. Additionally, collecting data from all team members gave enough variation in the data to ensure our classifier is robust and general. 
 # 
-# Determining the event detection statistic that best distinguishes between regions of events and non-events involved evaluating the relationship between window size and contrast between the detection metric of said regions. The best performing detection method was found to be zero-crossings; the number of times the signal crosses the zero point (x-axis) per second, with an optimal window length of 0.35s. 
+# Determining the event detection statistic that best distinguishes between regions of events and non-events involved evaluating the relationship between window size and contrast between the detection metric of said regions. The best performing detection method was found to be zero-crossings; the number of times the signal crosses origin per second, with an optimal detection window length of 0.35s. 
 # 
-# Similarly, determining the optimal classifier involved evaluating the relationship between window size and accuracy of the classifier. The most robust classifier was found to be the ‘one extrema classifier’ with 96% accuracy and optimal window size of 0.65s. This classifier smooths the signal using a savitzky-golay filter, then determines if the first turning point is a minimum or maximum. The time taken to execute each classifier (except for KNN) is negligible and thus did not contribute to our choice of classifier.
+# Similarly, determining the optimal classifier involved evaluating the relationship between window size and accuracy of the classifier. The most accurate and latent classifier was found to be the ‘Max-Min-Range’ classification rule with 96% accuracy and requiring no extension on the detection window. This classifier smooths the signal using a savitzky-golay filter, then determines if the first turning point is a minimum or maximum. The time taken to execute each classifier (except for KNN) is negligible and thus did not contribute to our choice of classifier.
 # 
 # Re-designing Space Invaders to be controlled using left and right eye movements is not solely useful as an entertaining game with potential commercial success. It is a tool that can act as a learning interface to teach individuals how gesture control performs (as the technology is inevitably integrated into our everyday lives) by using a familiar, nostalgic game such as space invaders. Additional applications include inclusive gaming for those with muscular impairments and building a foundation model for future projects to extend.
 # 
@@ -31,6 +31,7 @@ from scipy.fft import fft, fftfreq, fftshift
 from scipy import signal
 from copy import deepcopy
 from catch22 import catch22_all
+import catch22
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import RFECV
 from sklearn.neighbors import KNeighborsClassifier
@@ -46,7 +47,7 @@ PATH = "../"
 # To run all computation, change to True. Otherwise, precomputed files will be loaded instead.
 compute_all = False
 # If running, ensure the following line is commented out. It disables plots for knitting to html purposes. 
-get_ipython().run_line_magic('matplotlib', 'agg')
+# %matplotlib agg
 
 # Set seed for reproducibility
 np.random.seed(420) 
@@ -61,11 +62,13 @@ DEP_PATH = PATH + "requirements/other_files/"
 
 # ## Motivation & Background
 
-# Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over \$21 billion alone {cite}`VR`, the gaming industry is evidently undergoing a similar transformation. Such financial success is reason enough to design and implement a game that is similarly controlled by one of these technological advancements. This project involves using gesture control, an instance of one of these technological advancements, to re-develop Space Invaders, the iconic 80’s game which grossed an equivalent of $13 billion {cite}`SpaceInvaders`. 
+# Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over \$21 billion alone {cite}`VR`, the gaming industry is evidently undergoing a similar transformation. The financial success of other games such as Pokemon Go, which used augmented reality to re-develop the themes and goals of its franchise, is reason enough to design and implement a game that is similarly controlled by one of these technological advancements. 
 # 
-# Our desired product is the nostalgic game of Space Invaders, with the spaceship  alternatively controlled by left and right eye movements. These movements are represented by signals generated by the Backyard Brains Spiker Box {cite}`BYB`. The creation of such a game is motivated by the financial success of games such as Pokemon Go which used augmented reality to re-develop the themes and goals of the popular video game series, Pokemon. Our target market is anyone interested in leading technologies and gaming, akin to PokemonGo’s and the original Space Invaders audience. A short survey was conducted and out of 33 people, 85% said they would be interested in this version of Space Invaders. This demonstrates potential commercial success with a remastered launch.
+# This project involves using gesture control, one of these technological advancements, to re-develop Space Invaders, the iconic 80’s game which grossed an equivalent of $13 billion {cite}`SpaceInvaders`, using left and right eye movements as the spaceship's controls. These movements are represented by signals generated by the Backyard Brains Spikerbox {cite}`BYB`.
 # 
-# The fundamental aim of this project is to accurately and efficiently detect eye movements, and distinguish between left and right signals. This becomes an arduous task if solely Physics or Data Science is used to implement this project. By integrating these disciplines, the task. The workflow diagram in {numref}`flow` visually explains the role of each discipline, and how the success of the final product depends on the integration of these sciences. In particular, the Physics discipline is responsible for the experimental design and collection of data, to generate a clean, noticeable signal that is representative of a larger group of people. The Data Science discipline is responsible for implementing code that reads this data, searches for the occurrence of a movement and classifies the specific gesture. Additionally, the integrated knowledge and skills of the Physics and Data Science disciplines led to designing and implementing a method that evaluates the performance of the code in terms of accuracy and efficiency of detection and classification. 
+# Our target market is anyone interested in leading technologies and gaming, akin to Pokemon Go’s and the original Space Invaders audience. A short survey was conducted and out of 33 people, 85% said they would be interested in this version of Space Invaders. This demonstrates potential commercial success with a remastered launch.
+# 
+# The fundamental aim of this project is to accurately and efficiently detect eye movements, and distinguish between left and right signals. This becomes an arduous task if solely Physics or Data Science is used to implement this project. The workflow diagram in {numref}`flow` visually explains the role of each discipline, and how the success of the final product depends on the integration of these sciences. In particular, the Physics discipline is responsible for the experimental design and collection of data, to generate a clean, noticeable signal that is representative of a larger population. The Data Science discipline is responsible for implementing code that reads this data, searches for the occurrence of a movement and classifies the specific gesture. Additionally, the integrated knowledge and skills of the two disciplines led to designing and implementing a method that evaluates the performance of the detection and classification code in terms of accuracy and efficiency. 
 # 
 # Thus, using the skills and knowledge of Physics and Data Science, a well-tested gesture controlled version of Space invaders can be developed.
 # 
@@ -75,7 +78,7 @@ DEP_PATH = PATH + "requirements/other_files/"
 # scale: 30%
 # name: flow
 # ---
-# Workflow diagram illustrating the process undergone by both Physics and Data Science disciplines in the re-developemnt of the game Space Invaders.
+# Workflow diagram illustrating the process undergone by both Physics and Data Science disciplines in the re-development of the game Space Invaders.
 # ```
 # <!-- reference by {numref}`flow` -->
 
@@ -83,41 +86,40 @@ DEP_PATH = PATH + "requirements/other_files/"
 # 
 # In reference to {numref}`flow`, the first step in the re-development of Space Invaders requires experimenting with the Spikerbox to collect data which is representative application of the game. The aim of experimentation is to define characteristic signal signatures (such as left and right eye movements) and determine how these change as physical aspects of the experimental design vary.
 
-# ### Physical experiments performed & Findings
+# ### Physical Experiments Performed & Findings
 # 
 # The following sections detail the plethora of experiments performed and specifically what each test was exploring.
 # 
 # 
 
 # #### General eye movements
-# 
-# The first experiment is to determine if distinguishing between left and right eye movements is possible. Two electrodes were placed above the eyebrow of a team members eye and they were instructed to look forward. Then, the team member moved their eyes from the middle position, to the left or right, then immediately back to the middle-position.  (insert figure reference to signal graph) illustrates that while the signal shape of left and right eye movements appears the same, the polarity of the signals is inverted.
+# The first experiment is to determine if distinguishing between left and right eye movements is possible. Two electrodes were placed above the eyebrow of a team members eye and they were instructed to look forward. Then, the team member moved their eyes left or right, then immediately back to the middle.  (insert figure reference to signal graph) illustrates that while the signal shape of left and right eye movements appears the same, the polarity of the signals is inverted.
 # 
 # #### Varying speed of eye movements
-# With the same experimental set up, the team member is now instructed to vary the speed at which they look towards the left or right. It was found that when eye movements were too slow, the signal associated with looking from middle to the left became separated from that when looking from the left back to the middle. In fact, the differences between the signals had the same shape yet opposing polarity, much like that in the first experiment. However, with fast eye-movements, these two separate signals became one, yielding the same output as the first experiment.
+# The team member is now instructed to vary the speed at which they look left or right. It was found that when eye movements were too slow, the signal associated with looking from the middle to the left and looking from the left back to the middle became separated. However, with fast eye-movements, these two separate signals became one, yielding the same output as before.
 # 
 # #### Varying distance of eye movements
-# Now, the team member was asked to perform normal left-middle and right-middle eye movements such as in the first experiment, however, with each iteration they must look slightly further away from the middle position. The design of this experiment involved placing objects equally distant apart which acted as targets to look. It was found that if the eyes movement a small distance away from the middle position, a signal was barely detecable. This distance was not quantified, as we will see it is completely dependent on the individual performing the experiment. As the eyes moved further away from the beggining position, the amplitude of the signal grew accordingly. 
+# Now, the team member is asked to perform normal left-middle and right-middle eye movements, but with each iteration they must look further away from the middle position. This involved placing objects equally apart, acting as targets to look at. It was found that if the eye moved slightly away from the middle, a signal was barely detectable. This distance was not quantified, as it is dependent on the individual performing the experiment. As the eyes moved further away from the centre, the amplitude of the signal grew accordingly. 
 # 
-# #### Electrode Placement
-# The only experimental feature that is now different to the original experiment is the configuration of the electrode placements. It was found that placing the electrode vertically across tehe eye as opposed to horizontally no longer generates a distinguishabel signal for aleft and right eye movements. Instead, the best movement associated with this placement is up and down.
+# #### Electrode placement
+# We now experiment with the configuration of the electrode placements. It was found that placing the electrode vertically across the eye as opposed to horizontally no longer generates a distinguishable signal for left and right eye movements. Instead, the best movement associated with this placement is up and down.
 # 
-# Additionally, altering the distance between the electrode placement was tested about found that electrodes placed much closer than arounf 3cm to each other failed to generate a noticable, distinguishable signal with left and right eye movements.
+# Additionally, it was found that altering the distance between the electrodes to be closer than around 3cm to each other failed to generate a noticeable, distinguishable signal with left and right eye movements.
 # 
-# #### Changing Individual & Changing Boxes
-# As experimental equipment was swapped, such as the SpikerBox itself, electrodes and connecting wires, or there there is a new team member collecting the data, the dignal generated was subject to change. Such changes included variation in noise, signal amplitude and in worst cases a completely different signal signature in general.
+# #### Changing individual & changing boxes
+# As experimental equipment was swapped, such as the Spikerbox itself, electrodes and connecting wires, or a new team member collecting the data, the signal generated was subject to change. Such changes included variation in noise, signal amplitude and in worst cases a completely different signal signature.
 # 
-# #### Determining how the signal changes with natural Movement
-# Using the same experimental set up as the first experiment, the user was asked to sit still and blink naturally, then move their face (smile, raise tehir eyebrows, shake their head, scrunch their nose etc.). Occasionally the blinks were small, detectable peaks in the signal. Whereas movement of the muscles in their face cause a dramatic increase in noise and sometimes amplitude.
+# #### Determining how the signal changes with natural movements
+# The user is now asked to sit still and blink naturally, then move their face (smile, raise their eyebrows, shake their head, scrunch their nose, etc.). The blinks were small, detectable peaks in the signal, whereas movement of the muscles in their face cause a dramatic increase in noise and sometimes amplitude.
 
 # ### Immediate Implications of Findings 
 # 
-# From our above findings, we can immediately adapt the final experimental design to ensure the cleanest and most noticable signal is generated. 
-# - Throughout the rest of the experiment data was collected by placing the electrodes at least 3cm apart in a horizontal configuration above the eyebrow. 
-# - The speed the user moves their eyes are fast, however, these movements are separated by minimum time intervals to prevent merging the signals. 
-# - Throughout data collection, markers were placed on the left and right of the user to act as a target, ensuring they move their eyes far enough to generate a strong signal. 
-# - Data was collected from more than one individual to ensure the dataset it representative of a larger group. 
-# - To overcome the issue due to noise it would be appropriate duing pre-processing to use a noise filter. 
+# From our above findings, we can immediately adapt the final experimental design to ensure the cleanest and most noticeable signal is generated. 
+# - Throughout the rest of the experiment, data was collected by placing the electrodes at least 3cm apart in a horizontal configuration above the eyebrow. 
+# - The user was instructed to move their eyes quickly. However, these movements are separated by minimum time intervals to prevent merging the signals. 
+# - Throughout data collection, markers were placed on the left and right of the user to act as a target, ensuring they moved their eyes far enough to generate a strong signal. 
+# - Data was collected from more than one individual to ensure the dataset is representative of a larger group. 
+# - To overcome the issue due to noise, it would be appropriate during pre-processing to use a noise filter. 
 # - To overcome the issue due to changing signal amplitude, pre-processing of the signal should additionally involve normalisation or calibration.
 
 # ### Sample Collection of Data
@@ -133,7 +135,7 @@ DEP_PATH = PATH + "requirements/other_files/"
 # In[2]:
 
 
-def load_data(path, fnames, scale_factor = 1, shift_factor = -512):
+def load_data(path, fnames, scale_factor = 1, shift_factor = -512, fix_alessandro=False, offsets=None):
     waves = {}
     labels = {}
     for file in fnames:
@@ -141,7 +143,18 @@ def load_data(path, fnames, scale_factor = 1, shift_factor = -512):
         samprate, wav_array = wavfile.read(path+file+".wav")
         wav_array = wav_array*scale_factor
         wav_array += shift_factor
-        waves[file] = wav_array
+        # Fix the bug in alessandro's code
+        if fix_alessandro:
+            fixed_wav = []
+            step = 999
+            offset = offsets[file]
+            for j, i in enumerate(range(offset, len(wav_array)-step, step)):
+                if j == 0:
+                    fixed_wav.append(np.flip(wav_array[0:i+step]))
+                fixed_wav.append(np.flip(wav_array[i:i+step]))
+            waves[file] = np.concatenate(fixed_wav)
+        else:
+            waves[file] = wav_array
         # Load in label file
         labels_dat = pd.read_csv(path+file+".txt", sep=",\t", skiprows=1)
         labels_dat.columns = ["label", "time"]
@@ -153,19 +166,30 @@ def load_data(path, fnames, scale_factor = 1, shift_factor = -512):
 
 fnames = ["data1", "data2", "data3", "data4", "data5", "data6", "data7", "data8"]
 
+# Offsets to fix the error in alessandro's code
+offsets = {"data1":0,
+           "data2":0,
+           "data3":0,
+           "data4":0,
+           "data5":-5,
+           "data6":0,
+           "data7":-1,
+           "data8":0}
+
 # Randomly select two files for the test set, remainder as training
 test_files = np.random.choice(fnames, 2, replace=False)
 training_files = list(set(fnames) - set(test_files))
 
 # Training Data
 waves, labels = load_data(
-    IN_PATH, training_files, scale_factor = 1, shift_factor = -512)
+    IN_PATH, training_files, scale_factor = 1, shift_factor = -512, fix_alessandro=True, offsets=offsets)
 
 # Test Data
 test_waves, test_labels = load_data(
-    IN_PATH, test_files, scale_factor = 1, shift_factor = -512)
+    IN_PATH, test_files, scale_factor = 1, shift_factor = -512, fix_alessandro=True, offsets=offsets)
 
-# Define Sample Rate: 10,000 Hz
+# Define Calibration Window and Sample Rate: 10,000 Hz
+calibration_window_sec = 5
 samprate = 10_000
 
 
@@ -254,7 +278,7 @@ def streaming_classifier(
         flip_threshold = False,                # Threshold is a lower bound if true, upper bound if false
         consecutive_event_triggers = 3,        # How many threshold triggers need to occur in a row for an 
                                                    # event to be called
-        consecutive_nonevent_reset = 1         # How many threshold failures need to occur in a row for the
+        consecutive_nonevent_reset = 10         # How many threshold failures need to occur in a row for the
                                                    # classifier to be primed for a new event
         ):
 
@@ -596,7 +620,6 @@ output_filename_thresh_opt = OUT_PATH + "threshold_optimisation.csv"
 
 if compute_all:
     open(output_filename_thresh_opt, "w").close() # Clear file
-    calibration_window_sec = 5
     for st_scale in np.linspace(0.01, 1, 100):
         fps, fns, tps, i = 0, 0, 0, 0
         for key in waves.keys():
@@ -608,7 +631,7 @@ if compute_all:
                 classification_window_size_sec = opt_det_window,
                 detection_window_size_sec = opt_det_window,
                 detection_window_offset_sec = 0,
-                calibration_window_size_sec = 5,
+                calibration_window_size_sec = calibration_window_sec,
                 calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
                 event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
                 event_threshold_factor = st_scale, 
@@ -966,7 +989,7 @@ if compute_all:
                     classification_window_size_sec = classification_window,
                     detection_window_size_sec = opt_det_window,
                     detection_window_offset_sec = w,
-                    calibration_window_size_sec = 5,
+                    calibration_window_size_sec = calibration_window_sec,
                     calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
                     event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
                     event_threshold_factor = opt_thresh, 
@@ -980,7 +1003,6 @@ if compute_all:
                 with open(output_filename_cls_opt, "a") as file:
                     file.write(",".join([classifier_label, str(classification_window), 
                                          key, predictions, actuals, str(lev_dist), str(acc)]) + '\n')
-
                     
 results = pd.read_csv(output_filename_cls_opt, header=None)
 results.columns = ["classifier", "window_size", "file", "predicted", "actual", "lev_dist", "accuracy"]
@@ -1053,7 +1075,7 @@ if compute_all:
                 classification_window_size_sec = optimal_cl_windows[classifier_label],
                 detection_window_size_sec = opt_det_window,
                 detection_window_offset_sec = offset,
-                calibration_window_size_sec = 5,
+                calibration_window_size_sec = calibration_window_sec,
                 calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
                 event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
                 event_threshold_factor = opt_thresh, 
@@ -1159,7 +1181,7 @@ def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibra
                      label = "Calibration",
                      alpha=shade_alpha)
     ax[i].set_title(title)
-    
+        
 
 fig, ax = plt.subplots(8, 1)
 fig.set_size_inches(16, 10)
@@ -1203,7 +1225,7 @@ streaming_classifier(
     classification_window_size_sec = optimal_cl_windows[classifier_label],
     detection_window_size_sec = opt_det_window,
     detection_window_offset_sec = offset,
-    calibration_window_size_sec = 5,
+    calibration_window_size_sec = calibration_window_sec,
     calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
     event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
     event_threshold_factor = opt_thresh, 
@@ -1215,6 +1237,9 @@ streaming_classifier(
     create_FIFO_msg = None,
     )
 
+
+# Below is the code used to perform feature selection on the features calculated using catch22 for the kNN classifier. An external set of data was used to determine these features as to not bias the optimisation process undertaken in 4.2.3.
+# This feature data was saved to `catch22_step_selected_features.csv` for use in the kNN classifier.
 
 # In[22]:
 
@@ -1231,7 +1256,7 @@ knn_names = ['left-middle-right-middle#2', 'left-middle-right-middle', 'left-mid
 
 # Load the data
 knn_waves, knn_labels = load_data(
-    KNN_DATA_PATH, knn_names, scale_factor = 1, shift_factor = -512)
+    KNN_DATA_PATH, knn_names, scale_factor = 1, shift_factor = -512, fix_alessandro=False)
 
 # Define sample rate: 10,000 Hz
 samprate = 10_000
@@ -1281,6 +1306,63 @@ selected_features_df.columns = columns_retained
 selected_features_df['labels'] = event_labels
 
 # selected_features_df.to_csv(DEP_PATH+'catch22_step_selected_features.csv',index=False)
+
+
+# In[23]:
+
+
+# Gridsearch to optimise consecutive_event_triggers and consecutive_nonevent_reset
+# Chose minimum pair with optimal f score of 0.993 - (3, 10). A minimum pair minimises latency
+if compute_all:
+    trigset = {}
+    for trigs in range(1, 6):
+        for reset in range(5, 25):
+            fscores = []
+            for key in waves.keys():
+                fps, fns, tps, i = 0, 0, 0, 0
+                predictions, predictions_timestamps = streaming_classifier(
+                    waves[key],
+                    samprate,
+                    lambda x,y: "R" if np.random.rand()<0.5 else "L",
+                    input_buffer_size_sec = 0.05,
+                    classification_window_size_sec = opt_det_window,
+                    detection_window_size_sec = opt_det_window,
+                    detection_window_offset_sec = 0,
+                    calibration_window_size_sec = calibration_window_sec,
+                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                    event_threshold_factor = 0.33, 
+                    flip_threshold = True, 
+                    consecutive_event_triggers = trigs, 
+                    consecutive_nonevent_reset = reset
+                )
+                before_buffer = time_buffers_hump[key][0]
+                after_buffer = time_buffers_hump[key][1]
+                actual_times = [(time-before_buffer, time+after_buffer) for time in labels[key].time]
+                actual_leftovers = deepcopy(actual_times)
+                pred_leftovers = deepcopy(predictions_timestamps)
+                tps += len(actual_times)
+                for act_times in actual_times:
+                    if act_times[1] < calibration_window_sec:
+                        actual_leftovers.remove(act_times)
+                        continue
+                    for pred_times in predictions_timestamps:
+                        if (act_times[0] < pred_times[1] and act_times[1] > pred_times[0] and
+                            pred_times in pred_leftovers and act_times in actual_leftovers):
+                            actual_leftovers.remove(act_times)
+                            pred_leftovers.remove(pred_times)
+                tps -= len(actual_leftovers)
+                fns += len(actual_leftovers)
+                fps += len(pred_leftovers)
+                i += 1
+                fscore = tps/(tps+0.5*(fns+fps))
+                fscores.append(fscore)
+            print(trigs, reset, np.mean(fscores))
+            trigset[(trigs, reset)] = np.mean(fscores)
+
+
+        
+        
 
 
 # ## References 
