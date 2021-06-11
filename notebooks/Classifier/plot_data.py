@@ -39,10 +39,10 @@ def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", before_
     ax[i].set_title(title)
     
     ax[i].legend()
+
     
-    
-    
-    
+
+
 def plot_predictions(wav_array, samprate, labels_dat, predictions, predictions_timestamps, ax, i,
                      title="", before_buffer = 0.7, after_buffer = 1, actual_alpha=0.2,
                      wave_alpha=1, pred_alpha = 0.5, miny = -100, maxy = 100):
@@ -108,9 +108,9 @@ def plot_predictions(wav_array, samprate, labels_dat, predictions, predictions_t
     
     ax[i].set_title(title)
     ax[i].legend()
+
     
-    
-    
+
 def plot_detection_errors(wav_array, samprate, fp, fn, ax, i,
                      title="", alpha=0.2,
                      wave_alpha=1, miny = -100, maxy = 100):
@@ -145,4 +145,4 @@ def plot_detection_errors(wav_array, samprate, fp, fn, ax, i,
     
     ax[i].set_title(title)
     ax[i].legend()
-    
+
