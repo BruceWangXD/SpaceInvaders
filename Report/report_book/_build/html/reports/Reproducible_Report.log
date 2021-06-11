@@ -65,7 +65,7 @@ streaming_classifier(
 During handling of the above exception, another exception occurred:
 
 [0;31mSerialException[0m                           Traceback (most recent call last)
-[0;32m<ipython-input-21-994ec2ec03df>[0m in [0;36m<module>[0;34m[0m
+[0;32m<ipython-input-20-994ec2ec03df>[0m in [0;36m<module>[0;34m[0m
 [1;32m      4[0m [0mcport[0m [0;34m=[0m [0;34m"/dev/cu.usbserial-DJ00E33Q"[0m[0;34m[0m[0;34m[0m[0m
 [1;32m      5[0m [0mbaudrate[0m [0;34m=[0m [0;36m230400[0m[0;34m[0m[0;34m[0m[0m
 [0;32m----> 6[0;31m [0mser[0m [0;34m=[0m [0mserial[0m[0;34m.[0m[0mSerial[0m[0;34m([0m[0mport[0m[0;34m=[0m[0mcport[0m[0;34m,[0m [0mbaudrate[0m[0;34m=[0m[0mbaudrate[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
