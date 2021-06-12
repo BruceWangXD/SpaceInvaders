@@ -3,9 +3,7 @@
 
 
 # Steps to run our reproducible report:
-
 1. Navigate to Report/requirements/
-
 
 2. Install python dependencies:
     pip install -r requirements.txt
@@ -20,6 +18,6 @@
     3.5. jupyter nbextension enable python-markdown/main
 
 4. Run notebook
-    4.1. Navigate to 'Reproducible Report.ipynb' in Jupyter
+    4.1. Navigate to 'Report/report_book/Reproducible_Report.ipynb' in Jupyter
     4.2. Change the file paths and desired options in the code cell underneath Dependencies sections
     4.3. Run the notebook
