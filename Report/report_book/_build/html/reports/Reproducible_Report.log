@@ -1,15 +1,4 @@
 Traceback (most recent call last):
-  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 622, in _async_poll_for_reply
-    msg = await ensure_async(self.kc.shell_channel.get_msg(timeout=new_timeout))
-  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/util.py", line 85, in ensure_async
-    result = await obj
-  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/jupyter_client/asynchronous/channels.py", line 48, in get_msg
-    raise Empty
-_queue.Empty
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
   File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/jupyter_cache/executors/utils.py", line 51, in single_nb_execution
     executenb(
   File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 1112, in execute
@@ -22,18 +11,78 @@ Traceback (most recent call last):
     return future.result()
   File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 553, in async_execute
     await self.async_execute_cell(
-  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 841, in async_execute_cell
-    exec_reply = await self.task_poll_for_reply
-  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 646, in _async_poll_for_reply
-    await self._async_handle_timeout(timeout, cell)
-  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 696, in _async_handle_timeout
-    raise CellTimeoutError.error_from_timeout_and_cell(
-nbclient.exceptions.CellTimeoutError: A cell timed out while it was being executed, after 30 seconds.
-The message was: Cell execution timed out.
-Here is a preview of the cell contents:
--------------------
-['def get_event_regions(wav_array, samprate, labels_dat, time_buffer):', '    before_buffer = time_buffer[0]', '    after_buffer = time_buffer[1]', '    ', '    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate']
-...
-['            labels = labels,', '            step = 0.1,', '            contrast_fn = contrast,', '            time_buffers = time_buffers_whole', '        )']
--------------------
+  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 857, in async_execute_cell
+    self._check_raise_for_error(cell, exec_reply)
+  File "/Users/billydodds/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/nbclient/client.py", line 760, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+thresholds = pd.read_csv(output_filename_thresh_opt, header=None)
+thresholds.columns = ["threshold_factor", "f_score"] 
+
+thresh_factors = thresholds.threshold_factor
+f_score_list = thresholds.f_score
+
+plt.figure(figsize=(7, 7))
+plt.plot(thresh_factors, f_score_list)
+plt.title("$F_1$-Score vs. Threshold Factor\n(Zero Crossings Calibration Statistic)")
+opt_thresh = np.mean(thresh_factors[f_score_list == np.max(f_score_list)])
+opt_fscore = np.max(f_score_list)
+plt.vlines(opt_thresh, 0, opt_fscore, "r", ":", 
+           label=f"Optimal Point ({round(opt_thresh, 2)}, {round(opt_fscore, 2)})")
+plt.hlines(opt_fscore, 0, opt_thresh, "r", ":")
+plt.xlabel("Threshold Factor")
+plt.ylabel("$F_1$-Score")
+plt.legend(loc = "lower right")
+plt.savefig(OUT_PATH+"threshold.png")
+------------------
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mEmptyDataError[0m                            Traceback (most recent call last)
+[0;32m<ipython-input-12-a86d51e7403f>[0m in [0;36m<module>[0;34m[0m
+[0;32m----> 1[0;31m [0mthresholds[0m [0;34m=[0m [0mpd[0m[0;34m.[0m[0mread_csv[0m[0;34m([0m[0moutput_filename_thresh_opt[0m[0;34m,[0m [0mheader[0m[0;34m=[0m[0;32mNone[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m      2[0m [0mthresholds[0m[0;34m.[0m[0mcolumns[0m [0;34m=[0m [0;34m[[0m[0;34m"threshold_factor"[0m[0;34m,[0m [0;34m"f_score"[0m[0;34m][0m[0;34m[0m[0;34m[0m[0m
+[1;32m      3[0m [0;34m[0m[0m
+[1;32m      4[0m [0mthresh_factors[0m [0;34m=[0m [0mthresholds[0m[0;34m.[0m[0mthreshold_factor[0m[0;34m[0m[0;34m[0m[0m
+[1;32m      5[0m [0mf_score_list[0m [0;34m=[0m [0mthresholds[0m[0;34m.[0m[0mf_score[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/pandas/io/parsers.py[0m in [0;36mread_csv[0;34m(filepath_or_buffer, sep, delimiter, header, names, index_col, usecols, squeeze, prefix, mangle_dupe_cols, dtype, engine, converters, true_values, false_values, skipinitialspace, skiprows, skipfooter, nrows, na_values, keep_default_na, na_filter, verbose, skip_blank_lines, parse_dates, infer_datetime_format, keep_date_col, date_parser, dayfirst, cache_dates, iterator, chunksize, compression, thousands, decimal, lineterminator, quotechar, quoting, doublequote, escapechar, comment, encoding, dialect, error_bad_lines, warn_bad_lines, delim_whitespace, low_memory, memory_map, float_precision, storage_options)[0m
+[1;32m    608[0m     [0mkwds[0m[0;34m.[0m[0mupdate[0m[0;34m([0m[0mkwds_defaults[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[1;32m    609[0m [0;34m[0m[0m
+[0;32m--> 610[0;31m     [0;32mreturn[0m [0m_read[0m[0;34m([0m[0mfilepath_or_buffer[0m[0;34m,[0m [0mkwds[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    611[0m [0;34m[0m[0m
+[1;32m    612[0m [0;34m[0m[0m
+
+[0;32m~/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/pandas/io/parsers.py[0m in [0;36m_read[0;34m(filepath_or_buffer, kwds)[0m
+[1;32m    460[0m [0;34m[0m[0m
+[1;32m    461[0m     [0;31m# Create the parser.[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[0;32m--> 462[0;31m     [0mparser[0m [0;34m=[0m [0mTextFileReader[0m[0;34m([0m[0mfilepath_or_buffer[0m[0;34m,[0m [0;34m**[0m[0mkwds[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    463[0m [0;34m[0m[0m
+[1;32m    464[0m     [0;32mif[0m [0mchunksize[0m [0;32mor[0m [0miterator[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/pandas/io/parsers.py[0m in [0;36m__init__[0;34m(self, f, engine, **kwds)[0m
+[1;32m    817[0m             [0mself[0m[0;34m.[0m[0moptions[0m[0;34m[[0m[0;34m"has_index_names"[0m[0;34m][0m [0;34m=[0m [0mkwds[0m[0;34m[[0m[0;34m"has_index_names"[0m[0;34m][0m[0;34m[0m[0;34m[0m[0m
+[1;32m    818[0m [0;34m[0m[0m
+[0;32m--> 819[0;31m         [0mself[0m[0;34m.[0m[0m_engine[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0m_make_engine[0m[0;34m([0m[0mself[0m[0;34m.[0m[0mengine[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m    820[0m [0;34m[0m[0m
+[1;32m    821[0m     [0;32mdef[0m [0mclose[0m[0;34m([0m[0mself[0m[0;34m)[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/pandas/io/parsers.py[0m in [0;36m_make_engine[0;34m(self, engine)[0m
+[1;32m   1048[0m             )
+[1;32m   1049[0m         [0;31m# error: Too many arguments for "ParserBase"[0m[0;34m[0m[0;34m[0m[0;34m[0m[0m
+[0;32m-> 1050[0;31m         [0;32mreturn[0m [0mmapping[0m[0;34m[[0m[0mengine[0m[0;34m][0m[0;34m([0m[0mself[0m[0;34m.[0m[0mf[0m[0;34m,[0m [0;34m**[0m[0mself[0m[0;34m.[0m[0moptions[0m[0;34m)[0m  [0;31m# type: ignore[call-arg][0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m   1051[0m [0;34m[0m[0m
+[1;32m   1052[0m     [0;32mdef[0m [0m_failover_to_python[0m[0;34m([0m[0mself[0m[0;34m)[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32m~/.pyenv/versions/3.8.3/envs/phys/lib/python3.8/site-packages/pandas/io/parsers.py[0m in [0;36m__init__[0;34m(self, src, **kwds)[0m
+[1;32m   1896[0m [0;34m[0m[0m
+[1;32m   1897[0m         [0;32mtry[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m-> 1898[0;31m             [0mself[0m[0;34m.[0m[0m_reader[0m [0;34m=[0m [0mparsers[0m[0;34m.[0m[0mTextReader[0m[0;34m([0m[0mself[0m[0;34m.[0m[0mhandles[0m[0;34m.[0m[0mhandle[0m[0;34m,[0m [0;34m**[0m[0mkwds[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[1;32m   1899[0m         [0;32mexcept[0m [0mException[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[1;32m   1900[0m             [0mself[0m[0;34m.[0m[0mhandles[0m[0;34m.[0m[0mclose[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+
+[0;32mpandas/_libs/parsers.pyx[0m in [0;36mpandas._libs.parsers.TextReader.__cinit__[0;34m()[0m
+
+[0;31mEmptyDataError[0m: No columns to parse from file
+EmptyDataError: No columns to parse from file
 

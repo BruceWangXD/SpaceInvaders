@@ -9,8 +9,11 @@ from scipy import signal
 from copy import deepcopy
 from catch22 import catch22_all
 import catch22
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.feature_selection import RFECV
 from sklearn.neighbors import KNeighborsClassifier
 from numba import njit
 from weighted_levenshtein import lev
 import struct
+import warnings
 import serial

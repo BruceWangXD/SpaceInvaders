@@ -1,20 +1,41 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Making Space Invaders Fun and Accessible with Brain-Computer Interfacing
+# # Making Space Invaders Fun and Accessible with Eye-Movement Gesture Control
 
 # ## Executive Summary
 
-# Technological advancements such as gesture control, voice recognition, virtual and augmented reality are redefining gaming, advancing an already booming and competitive industry. The project detailed in this report is a redesigned version of Space Invaders, with the ship controlled using gestures, specifically left and right eye movements. Its development is motivated by the financial success of similarly advanced games such as Pokemon Go and without doubt, the original Space Invaders which was a technological wonder for its time. 
+# Re-imagining Space Invaders with gesture control brings with it great commercial promise. Additionally, our product can act as a learning tool to introduce individuals, particularly children, to gesture control technology; a need that will inevitably grow as gesture control becomes more integrated into our everyday lives.
 # 
-# {numref}`flow` is a workflow diagram which illustrates the process undergone in the development of the product and how the Physics and Data Science disciplines worked as one unit. After performing a plethora of experiments, it was found that having the electrodes at least 3cm apart, performing fast eye movements and placing left and right markers for the user, generated a clean, noticeable signal. Additionally, collecting data from all team members gave enough variation in the data to ensure our classifier is robust and general. 
+# Using a Spiker Box from Backyard Brains {cite}`BYB`, our team performed a plethora of experiments to develop an optimal data collection strategy. We chose left and right eye movements to be the controls of our game and recorded the data with electrodes placed horizontally at an optimal spacing of 3cm. Markers were placed at -45$^\circ$ and 45$^\circ$ (relative to centre) to improve signal consistency. A calibration period was introduced to control for inter-subject variability.
 # 
-# Determining the event detection statistic that best distinguishes between regions of events and non-events involved evaluating the relationship between window size and contrast between the detection metric of said regions. The best performing detection method was found to be zero-crossings; the number of times the signal crosses origin per second, with an optimal detection window length of 0.35s. 
+# We used this data to develop a streaming algorithm. By optimising event detection and classification using a sequence of grid searches, the Max-Min-Range classifier had the best tradeoff between latency and accuracy, and hence we chose it for our product.
 # 
-# Similarly, determining the optimal classifier involved evaluating the relationship between window size and accuracy of the classifier. The most accurate and latent classifier was found to be the ‘Max-Min-Range’ classification rule with 96% accuracy and requiring no extension on the detection window. This classifier smooths the signal using a savitzky-golay filter, then determines if the first turning point is a minimum or maximum. The time taken to execute each classifier (except for KNN) is negligible and thus did not contribute to our choice of classifier.
+# The optimised classifier was then integrated with the Space Invaders game using inter-process communication and the prototype worked successfully.
 # 
-# Re-designing Space Invaders to be controlled using left and right eye movements is not solely useful as an entertaining game with potential commercial success. It is a tool that can act as a learning interface to teach individuals how gesture control performs (as the technology is inevitably integrated into our everyday lives) by using a familiar, nostalgic game such as space invaders. Additional applications include inclusive gaming for those with muscular impairments and building a foundation model for future projects to extend.
 # 
+
+# ## Motivation & Background
+
+# Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over \$21 billion alone {cite}`VR`, the gaming industry is evidently undergoing a similar transformation. The financial success of games such as Pokemon Go, which used augmented reality to re-develop the themes and goals of its franchise, is reason enough to design and implement a game that is similarly revamped by one of these technological advancements. 
+# 
+# This project uses gesture control, one of these technological advancements, to re-develop Space Invaders to be played with left and right eye movements. Space Invaders is an iconic 80’s game that grossed an equivalent of $13 billion {cite}`SpaceInvaders`, proving the market potential for a re-imagined version. 
+# 
+# Our target market is anyone interested in leading technologies and gaming, akin to Pokemon Go’s and the original Space Invaders audience. A short survey was conducted and out of 33 people, 85% said they would be interested in this version of Space Invaders. This demonstrates potential commercial success with a remastered launch.
+# 
+# The fundamental aim of this project is to develop a working prototype for Space Invaders with eye control. This involves collecting data, designing and optimising a streaming classifier capable of distinguishing left and right eye movement,s and integrating this into a Space Invaders game. This becomes an arduous task if solely physics or data science undertook this project. In particular, physics is responsible for collection of representative data and data science will use this data to build and optimise a streaming classifier. Both disciplines cooperated to design an effective workflow, outlined in {numref}`flow`, to achieve the project aim. Thus, using the skills and knowledge of Physics and Data Science, a well-tested gesture controlled version of Space invaders can be developed.
+# 
+
+# ```{figure} ../report_outputs/flow.png
+# ---
+# scale: 35%
+# name: flow
+# ---
+# Workflow diagram illustrating the process undergone by both Physics and Data Science disciplines in the re-development of the game Space Invaders.
+# ```
+# <!-- reference by {numref}`flow` -->
+
+# ## Methods
 
 # ### Dependencies
 
@@ -45,9 +66,10 @@ warnings.filterwarnings('ignore')
 # Update this to point to the report folder
 PATH = "../"
 # To run all computation, change to True. Otherwise, precomputed files will be loaded instead.
-compute_all = True
+compute_all = False
 # If running, ensure the following line is commented out. It disables plots for knitting to html purposes. 
 get_ipython().run_line_magic('matplotlib', 'agg')
+
 
 # Set seed for reproducibility
 np.random.seed(420) 
@@ -59,95 +81,47 @@ IN_PATH = PATH + "data/"
 DEP_PATH = PATH + "requirements/other_files/"
 
 
-
-# ## Motivation & Background
-
-# Over the past two decades, profound advancements in technology such as facial recognition, gesture control, virtual assistants and other instances of machine learning have gradually been integrated into everyday life. With virtual reality worth over \$21 billion alone {cite}`VR`, the gaming industry is evidently undergoing a similar transformation. The financial success of games such as Pokemon Go, which used augmented reality to re-develop the themes and goals of its franchise, is reason enough to design and implement a game that is similarly controlled by one of these technological advancements. 
-# 
-# This project involves using gesture control, one of these technological advancements, to re-develop Space Invaders, the iconic 80’s game which grossed an equivalent of $13 billion {cite}`SpaceInvaders`, using left and right eye movements as the spaceship's controls. These movements are represented by signals generated by the Backyard Brains Spikerbox {cite}`BYB`.
-# 
-# Our target market is anyone interested in leading technologies and gaming, akin to Pokemon Go’s and the original Space Invaders audience. A short survey was conducted and out of 33 people, 85% said they would be interested in this version of Space Invaders. This demonstrates potential commercial success with a remastered launch.
-# 
-# The fundamental aim of this project is to accurately and efficiently detect eye movements, and distinguish between left and right signals. This becomes an arduous task if solely Physics or Data Science is used to implement this project. The workflow diagram in {numref}`flow` visually explains the role of each discipline, and how the success of the final product depends on the integration of these sciences. In particular, the Physics discipline is responsible for the experimental design and collection of data, to generate a clean, noticeable signal that is representative of a larger population. The Data Science discipline is responsible for implementing code that reads this data, searches for the occurrence of a movement and classifies the specific gesture. Additionally, the integrated knowledge and skills of the two disciplines led to designing and implementing a method that evaluates the performance of the detection and classification code in terms of accuracy and efficiency. 
-# 
-# Thus, using the skills and knowledge of Physics and Data Science, a well-tested gesture controlled version of Space invaders can be developed.
-# 
-
-# ```{figure} ../report_outputs/flow.png
-# ---
-# scale: 30%
-# name: flow
-# ---
-# Workflow diagram illustrating the process undergone by both Physics and Data Science disciplines in the re-development of the game Space Invaders.
-# ```
-# <!-- reference by {numref}`flow` -->
-
-# ## Methods
+# (methods:exp)=
 # ### Experimentation & Data Collection
 # 
-# In reference to {numref}`flow`, the first step in the re-development of Space Invaders requires experimenting with the Spikerbox to collect data which is representative of the Space Invaders application. The aim of experimentation is to determine how left and right eye movements change as physical aspects of the experimental design vary.
+# In reference to {numref}`flow`, the first step in the re-development of Space Invaders requires designing the data collection protocol to collect data representative of the Space Invaders application. The streaming data was collected using a Backyard Brains Spikerbox {cite}`BYB`. 
 
-# #### Physical Experiments Performed & Findings
+# #### Physical Experiments Performed
 # 
-# The following sections detail the plethora of experiments performed and specifically what each test was exploring.
+# We first experimented with various muscle movements, such as raising eyebrows, blinking, and smiling, and found that each generated a different signal shape. Left and right eye movements were the next investigated and produced distinguishable signals as shown in {numref}`signals`, and hence were the movements chosen for further experimentation. 
 # 
-# 
+# Left-right movement experimentation involved varying the angle and distance of the electrodes. This was shown to change the quality drastically. Furthermore, we altered the distance that the subject moved their eyes by placing physical markers at different spacings to act as targets. This also affected signal quality but improved consistency. Aditionally, we experimented with different time between movements, performing sequences in quick and slow succession. And lastly, we experimented on different subjects and investigated the inter-subject variability. 
 
-# **General eye movements**
+# (methods:findings)=
+# #### Findings
 # 
-# The first experiment is to determine if distinguishing between left and right eye movements is possible. Two electrodes were placed above the eyebrow of a team members eye and they were instructed to look forward. Then, the team member moved their eyes left or right, then immediately back to the middle.  (insert figure reference to signal graph) illustrates that while the signal shape of left and right eye movements appears the same, the polarity of the signals is inverted.
+# Left and right signals produced the most distinguishable shapes, and so were chosen as the gestures for our game. The experimental design that produced the cleanest and most consistent signals incorporated the following:
+# - Electrodes spaced 3cm apart in a horizontal configuration above the eyebrow. 
+# - Quick eye movements at varied intervals to simulate gameplay. 
+# - Left and right markers placed at -45$^\circ$ and 45$^\circ$ relative to the middle.
+# - Data was collected from more than one individual to get a representative sample. 
 # 
-# **Varying speed of eye movements**
 # 
-# The team member is now instructed to vary the speed at which they look left or right. It was found that when eye movements were too slow, the signal associated with looking from the middle to the left and looking from the left back to the middle became separated. However, with fast eye-movements, these two separate signals became one, yielding the same output as before.
-# 
-# **Varying distance of eye movements**
-# 
-# Now, the team member is asked to perform normal left-middle and right-middle eye movements, but with each iteration they must look further away from the middle position. This involved placing objects equally apart, acting as targets to look at. It was found that if the eye moved slightly away from the middle, a signal was barely detectable. This distance was not quantified, as it is dependent on the individual performing the experiment. As the eyes moved further away from the centre, the amplitude of the signal grew accordingly. 
-# 
-# **Electrode placement**
-# 
-# We now experiment with the configuration of the electrode placements. It was found that placing the electrode vertically across the eye as opposed to horizontally no longer generates a distinguishable signal for left and right eye movements. Instead, the best movement associated with this placement is up and down.
-# 
-# Additionally, it was found that altering the distance between the electrodes to be closer than around 3cm to each other failed to generate a noticeable, distinguishable signal with left and right eye movements.
-# 
-# **Changing individual & changing boxes**
-# 
-# As experimental equipment was swapped, such as the Spikerbox itself, electrodes and connecting wires, or a new team member collecting the data, the signal generated was subject to change. Such changes included variation in noise, signal amplitude and in worst cases a completely different signal signature.
-# 
-# **Determining how the signal changes with natural movements**
-# 
-# The user is now asked to sit still and blink naturally, then move their face (smile, raise their eyebrows, shake their head, scrunch their nose, etc.). The blinks were small, detectable peaks in the signal, whereas movement of the muscles in their face cause a dramatic increase in noise and sometimes amplitude.
-
-# (methods:experiment:findings)=
-# #### Implications of Findings 
-# 
-# From our above findings, we adapted the final data collection method to include the following points: 
-# - Data was collected by placing the electrodes at least 3cm apart in a horizontal configuration above the eyebrow. 
-# - The user was instructed to move their eyes quickly. However, these movements are separated by minimum time intervals to prevent merging the signals. 
-# - Throughout data collection, markers were placed on the left and right of the user to act as a target, ensuring they moved their eyes far enough to generate a strong signal. 
-# - Data was collected from more than one individual to ensure the dataset is representative of a larger group. 
-# - To overcome the issue due to noise, it would be appropriate during pre-processing to use a noise filter. 
-# - To overcome the issue due to changing signal amplitude, pre-processing of the signal should additionally involve normalisation or calibration.
-
-# #### Data Collection
-# Using the points outlined in {ref}`methods:experiment:findings`, we prepared 8 wave files (.wav) to the following specifications:
-# - 50 seconds in length
-# - First 5 seconds is a calibration period - no movements performed
-# - A sequence of left and right movements are performed for the remaining 45 seconds
-# - Each file is accompanied with a labels textfile (.txt) containing the timestamps and labels of every event in the wavefile. '1' corresponds to a left eye movement, and '2' corresponds to a right eye movement, their approximate shapes are shown in {numref}`signal`.
-# - Each .wav file has a range of [0, 1024], but are centred to [-512, 512] within the `load_data` function defined below.
-# 
-# Two of the eight files were randomly selected as the test set, and the rest were assigned to the training set. 
+# A calibration window was recommended to mitigate against the significant inter-subject variability.
 
 # ```{figure} ../report_outputs/movement_signals.png
 # ---
-# scale: 75%
-# name: signal
+# scale: 90%
+# name: signals
 # ---
-# An example of the kind of signal produced by each movement, as well as noise that sometimes appeared in the recordings.
+# Examples of the signal shape of left and right eye movements, as well as an example of noise that we want the classifier to be robust to.
 # ```
-# <!-- reference by {numref}`signal` -->
+# <!-- reference by {numref}`signals` -->
+
+# #### Collection of Data
+# By incorporating the points outlined in {ref}`methods:findings`, 8 wave files (.wav) were prepared to the following specifications:
+# - 50s in length
+# - First 5s is a calibration period - no movements performed
+# - A sequence of left and right movements are performed for the remaining 45s at varying intervals.
+# - Each file is accompanied with a labels textfile (.txt) containing the timestamps and labels of every event in the wavefile. '1' corresponds to a left eye movement, and '2' corresponds to a right eye movement.
+# - Each .wav file has a range of [0, 1024], but are centred to [-512, 512] within the `load_data` function defined below.
+# 
+# Two of the eight files were randomly selected as the test set, and the rest were assigned to the training set. 
 
 # In[2]:
 
@@ -210,12 +184,12 @@ calibration_window_sec = 5
 samprate = 10_000
 
 
-# Next, we convert the singular timestamps in the labels dataframe to the time interval of the entire event. 
-
 # In[3]:
 
 
-# Creates an interval that covers the first hump
+# Dictionaries to convert singular timestamps in the labels dataframe to 
+# the time interval of the entire event and the first hump
+# First hump
 time_buffers_hump = {
     "data1":(-0.3, 0.55),
     "data2":(-0.3, 0.55),
@@ -227,7 +201,7 @@ time_buffers_hump = {
     "data8":(-0.5, 0.75)
 }
 
-# Creates an interval that covers the whole wave
+# Whole wave
 time_buffers_whole = {
     "data1":(-0.2, 1.15),
     "data2":(-0.2, 1.15),
@@ -242,13 +216,21 @@ time_buffers_whole = {
 
 # #### Streaming Algorithm Design
 # 
-# Once the data was prepared, we then had to design the basic structure of our streaming algorithm. The algorithm consists of two parts: event detection and classification. As the streaming data comes in, we only keep a window of fixed length in memory, effectively behaving as a sliding window at the front of the stream. This window updates in discrete intervals of some *buffer length*, and we call this window the *classification window*. 
+# To begin the development of the classifier, we must design the basic structure of our streaming algorithm. The algorithm will consist of two parts, the first is event detection, and the second is classification. As the streaming data comes in, we will only keep a sliding window at the front of the stream in memory. This window updates in discrete intervals of some *buffer length*. We will deem this window the *classification window*. 
 # 
-# Within that classification window, we fix another smaller window that slides along with the classification window. This subset of the classification window is what we will test an event criterion on, and is hence called the *detection window*. 
+# Within that classification window, a smaller window is fixed, sliding along with the classification window. This subset of the classification window is where we will test for an event, and is hence called the *detection window*. 
 # 
-# Each time the window is updated by the stream, the event criterion is tested on the detection window. To minimise false positives, that criterion will need to pass a set number of times, dictated by the `consecutive_event_triggers` parameter. 
+# Each time the window is updated by the stream, a statistic is generated from the detection window and tested against a threshold to deterimine whether there was an event. To minimise false positives, this criterion will need to pass `consecutive_event_triggers` number of times.
 # 
-# Once the event criterion has passed `consecutive_event_triggers` times, we pass the classification window to the classifier algorithm and block the classifier from detecting another event. When the event criterion has failed `consecutive_nonevent_reset` times, we prime the streaming algorithm to predict events again. This is to stop the algorithm from detecting the same event twice. For details on how these two parameters were optimised, see {ref}`appendix:consecutive` in the Appendix.
+# Once the event criterion has passed `consecutive_event_triggers` times, we pass the classification window to the classifier algorithm and block the classifier from detecting another event. When the event criterion has failed `consecutive_nonevent_reset` times, we prime the streaming algorithm to predict events again. This is to stop the algorithm from detecting the same event twice. These parameters were optimised using a gridsearch, the details of which can be found in {ref}`appendix:consecutive`.
+# 
+# 
+
+# In[ ]:
+
+
+
+
 
 # In[4]:
 
@@ -263,9 +245,7 @@ def read_arduinbro(wav_array, inputBufferSize, k):
     return np.flip(data)
 
 
-# In[5]:
-
-
+# Streaming classifier as described above
 def streaming_classifier(
         wav_array,                             # Either the array from file (or ser if live = True)
         samprate,
@@ -274,9 +254,12 @@ def streaming_classifier(
         store_events = False,                  # Whether to return the classification window array for
                                                    # debugging purposes
         store_times = False,                   # Store time taken for each classification
-        live = False,
+    
+        live = False,                          # If live
         FIFO_filename = None,
         create_FIFO_msg = None,
+        read_arduino = None,
+        process_data = None,
 
         classifier_params = {},
         classification_window_size_sec = 1.5,  # Total detection window [s]
@@ -379,10 +362,11 @@ def streaming_classifier(
         
         # if event, pass window to classifier
         if np.all(event_history[0:consecutive_event_triggers]) and primed:
-            start = time.time_ns()
-            prediction = classifier(data_window, samprate, **classifier_params)
-            end = time.time_ns()
             if store_times:
+                start = time.time_ns()
+            prediction = classifier(data_window, samprate, **classifier_params)
+            if store_times:
+                end = time.time_ns()
                 classification_times.append(end - start)
             if store_events:
                 predictions_storage.append(data_window)
@@ -421,23 +405,23 @@ def streaming_classifier(
                   
 
 
+# (methods:opt)=
 # ### Optimisation
 # 
-# We optimise the streaming algorithm in two dependent stages in accordance to {numref}`flow`. The first stage is to optimise event detection by choosing the best test statistic and threshold to apply over the detection window. The test statistic will be the statistic that maximises the contrast between event and non-event regions, and the threshold will be the threshold that maximises the $F_1$-score on the training set. 
+# We optimise the streaming algorithm in two dependent stages as shown in {numref}`flow`. The first stage is to optimise event detection by choosing the best test statistic and threshold to apply over the detection window. The best test statistic will be the statistic that maximises the contrast between event and non-event regions, and the threshold will be the threshold that maximises the $F_1$-score on the training set. 
 # 
-# When our algorithm is effective at distinguishing events from non-events, we will use the optimised event detection method to optimise our classifiers on the training set. Once all classifiers are optimised, we will choose the classifier with the best accuracy on the test set based on a levenshtein distance weighted to reflect what is most desirable for its Space Invaders use.
-# 
-# Finally, once all classifiers are optimised on the training set, we test their accuracy on the test set to determine the best classifier. 
+# Once event detection is optimised, we will carry over our findings to begin optimising the classifiers using the training set. Once all classifiers are optimised, we will choose the classifier with the best accuracy on the test set based on a Levenshtein distance weighted to reflect the gaming application.
 
-# #### Event Detection 
+# #### Event Detection
+# 
 # <!-- 
 # (write lil nicer) Hypothesis from physics perspective: plotting contrast against window length we expect a peak which is the optimal point, taking the appearance of normalisation curve. Thus, two pieces of information (best metric and optimal window length) can be extracted. -->
-# 
+
 # ##### Test Statistic
 # 
-# The first component to optimising event detection is to choose the best test statistic to be applied over the detection window. To do this, we first define five possible candidates for the test statistic. These candidates were chosen because they were deemed likely to be effective in distinguishing events from non-events. Specific justifications are commented above each of the five functions below.
+# The first component to optimising event detection requires choosing the best test statistic to calculate from the detection window. To do this, we first define 5 possible candidates for the test statistic. These candidates were chosen because they were deemed likely to be effective in distinguishing events from non-events. 
 
-# In[6]:
+# In[5]:
 
 
 # Define Test Stat Functions
@@ -459,6 +443,22 @@ def ts_abs_max(x):
 def ts_zero_crossings(x):
     return np.sum(x[0:-1]*x[1::] <= 0)
 
+# Fourier transforms can distinguish between events and non-events due to 
+def ts_max_frequency(frame, samprate=10000):
+    fs = samprate
+    dt = 1/fs
+    t = np.arange(0, (len(frame)*dt), dt)
+    # Num samples
+    N = len(frame)
+    yf = fft(frame)
+    xf = fftfreq(N, 1/fs)
+    np.size(xf)
+    np.size(t)
+    f, t, Sxx = signal.spectrogram(frame, fs)
+    maximum = np.max(Sxx)
+    threshold = maximum/5;
+    maximum_Freqs = np.amax(Sxx, 0) # max frequency for each time
+    return np.amax(maximum_Freqs)
 
 tfn_candidates = {"Range": ts_range,
                   "IQR": ts_IQR,
@@ -467,9 +467,9 @@ tfn_candidates = {"Range": ts_range,
                   "Zero Crossings": ts_zero_crossings}
 
 
-# ##### Evaluation Metric (Contrast)
+# ##### Maximising Contrast
 # 
-# To determine the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called *contrast*. Essentially, contrast is the absolute value of the Welch's t-test statistic between the set of statistics for event regions, and the set of statistics for non-event regions for a given candidate statistic. It is defined by the following formula:
+# To choose the best test statistic from the candidates, we first calculate a series of test statistics using a sliding window over each training file. Next, we define an evaluation metric called *contrast*. Essentially, contrast is the absolute value of the Welch's t-test statistic between the set of test statistics for event regions, and the set of test statistics for non-event regions. It is defined in {eq}`contrast`:
 # ```{math}
 # :label: contrast
 # \textit{contrast}(E, E^*) = \frac{|\bar{E} - \bar{E^*}|}{\sqrt{\frac{\sigma_E^2}{N_E} + \frac{\sigma_{E^*}^2}{N_{E^*}}}}
@@ -477,10 +477,8 @@ tfn_candidates = {"Range": ts_range,
 # <!-- reference it by {eq}`contrast` -->
 # where $E$ is the set of test statistics calculated over event regions, $E^*$ is the non-event region test statistics, and $\bar{k}$, $\sigma_k$ and $N_k$ are the mean, standard deviation and number of elements in set $k$ respectively.
 # 
-# This will yield the contrast for each candidate statistic when using a specific sliding window length.
-# 
 
-# In[7]:
+# In[6]:
 
 
 def contrast(events, non_events): 
@@ -488,7 +486,7 @@ def contrast(events, non_events):
     return np.abs(np.mean(events, axis=1) - np.mean(non_events, axis=1))/pooled_sd
 
 
-# Next, we perform a gridsearch varying the window length from 0 to 2 seconds and calculating the contrast of each candidate statistic for each window length. The results are shown in {numref}`contrast`. The best test statistic can be seen to be 'zero crossings' with an optimal detection window length of 0.45 seconds. Zero crossings is defined in {eq}`zeros`.
+# Next, we perform a gridsearch varying the window length from 0s to 2s and calculating the contrast of each candidate statistic for each window length. The results are shown in {numref}`contrast`. The best test statistic can be seen to be 'zero crossings' with an optimal detection window length of 0.43s. Zero crossings is defined in {eq}`zeros`.
 # 
 # ```{math}
 # :label: zeros
@@ -497,7 +495,7 @@ def contrast(events, non_events):
 # <!-- reference it by {eq}`zeros` -->
 # Where $\mathbf{x}$ is the detection window with $n$ samples.
 
-# In[8]:
+# In[7]:
 
 
 def get_event_regions(wav_array, samprate, labels_dat, time_buffer):
@@ -543,7 +541,7 @@ def get_contrast(wav_array, samprate, labels_dat, window_size, step, test_stat_f
     return contrast_stat
 
     
-def contrast_all_files(output_filename, window_size, test_stat_fns, samprate, 
+def contrast_all_files(file, window_size, test_stat_fns, samprate, 
                        waves, labels, contrast_fn, step=0.1, time_buffers=time_buffers_whole):   
     step = int(step*samprate)
     for i, key in enumerate(waves.keys()):
@@ -553,30 +551,33 @@ def contrast_all_files(output_filename, window_size, test_stat_fns, samprate,
         cont = get_contrast(wav_array, samprate, labels_dat,
                          window_size, step, test_stat_fns,
                          contrast_fn, time_buffers[key])
-        with open(output_filename, "a") as file:
-            file.write(",".join([str(window_size), key]) + "," + ','.join(np.round(cont, 4).astype(str)) + "\n")
+        
+        file.write(",".join([str(window_size), key]) + "," + ','.join(np.round(cont, 4).astype(str)) + "\n")
+
+
+# In[8]:
+
 
 output_filename_event_det_opt = OUT_PATH + "event_detection_optimisation.csv"
 
 if compute_all:
     granularity = 100
     open(output_filename_event_det_opt, 'w').close()    # Clears the file so that the code can be run again.
-    for i, x in enumerate(np.linspace(100, 10000, granularity)):
-        x = int(x)
-        if i%10 == 0:
-            print(f"{i} of {granularity}")
-        contrast_all_files(
-            output_filename_event_det_opt, 
-            window_size = x, 
-            test_stat_fns = tfn_candidates.values(),
-            samprate = samprate,
-            waves = waves,
-            labels = labels,
-            step = 0.1,
-            contrast_fn = contrast,
-            time_buffers = time_buffers_whole
-        )
-            
+    with open(output_filename_event_det_opt, "a") as file:
+        for i, x in enumerate(np.linspace(100, 10000, granularity)):
+            x=int(x)
+            print(x)
+            contrast_all_files(
+                file, 
+                window_size = x, 
+                test_stat_fns = tfn_candidates.values(),
+                samprate = samprate,
+                waves = waves,
+                labels = labels,
+                step = 0.1,
+                contrast_fn = contrast,
+                time_buffers = time_buffers_whole
+            )
 
 
 # In[9]:
@@ -594,7 +595,7 @@ for stat in tfn_candidates.keys():
 
 plt.title("Event Region Contrast vs. Detection Window")
 plt.xlabel("Detection Window Length (s)")
-plt.ylabel("Contrast (t Test Statistic)")
+plt.ylabel("Contrast (Welch's t-Test Statistic)")
 opt_det_window = contrasts_total.index[np.argmax(np.abs(contrasts_total["Zero Crossings"]))]/samprate
 opt_det_window_val = np.max(np.abs(contrasts_total["Zero Crossings"]))
 plt.vlines(opt_det_window, 0, opt_det_window_val,"r", ":", 
@@ -609,30 +610,33 @@ plt.savefig(OUT_PATH+"contrast.png")
 # scale: 75%
 # name: contrast
 # ---
-# Contrast of each test statistic as a function of window size. The contrast is calculated using {eq}`contrast`. We can see that zero crossings produces the maximum contrast at a window length of 0.45 seconds.
+# Contrast of each test statistic as a function of window size. The contrast is calculated using {eq}`contrast`. We can see that zero crossings {eq}`zeros` produces the maximum contrast at a window length of 0.43s.
 # ```
 # <!-- reference by {numref}`contrast` -->
 
 # ##### Threshold Optimisation
 # 
-# Now that we have determined the best test statistic and its optimal detection window, we use these values to determine the optimal threshold for event detection. To incorporate the findings in {ref}`methods:experiment:findings`, we make the threshold dependent on the calibration window. This is to control for the fact that some signals are more noisy than others. Hence, instead of searching for a raw threshold, we search for a factor which the zero crossings of the calibration window will be multiplied by to obtain the threshold. The formula for the threshold can be seen in {eq}`thresh`.
+# Now that we have determined the best test statistic and its corresponding optimal detection window length, we will use these to determine the optimal threshold for event detection. To do this, we perform yet another gridsearch to maximise $F_1$-score. Instead of searching for the threshold, we instead search for a factor $f$ which is used to define the threshold using {eq}`thresh`. This was recommended by the physics team in {ref}`methods:findings`. 
+# 
 # 
 # ```{math}
 # :label: thresh
-# t = f\times\text{Z}(\mathbf{C})
+# t = f\times \text{Z}(\mathbf{c})
 # ```
 # <!-- reference it by {eq}`thresh` -->
-# Where $t$ is the threshold, $f$ is the threshold factor, $\mathbf{C}$ is calibration window and $\text{Z}$ is the normalised zero crossings as defined in {eq}`zeros`.
 # 
-# To do find the optimal threshold factor $f$, we perform yet another gridsearch to maximise $F_1$-score, defined in {eq}`f1`. We have used the F1-score to determine the performance of the event detection, as it weighs false positives and false negatives equally. For our application, a false positive would result in the spaceship moving without a players consent, and a false negative would result in a missed movement. Both of these scenarios are equally undesirable.
+# Where $t$ is the threshold, $f$ is the threshold factor, Z is defined in {eq}`zeros` and $\mathbf{c}$ is the calibration window.
+# 
+# We have used the $F_1$-score to determine the performance of the event detection as it weighs the false positives and false negatives equally. Both false positives and false negatives are undesirable for our application: a false positive would mean an involuntary movement and a false negative would a missed movement, both scenarios endanger the player's spaceship. $F_1$-score is defined in {eq}`f1`.
 # 
 # ```{math}
 # :label: f1
-# F_1 = \frac{\text{TP}}{\text{TP}-\frac{1}{2}(\text{FP} + \text{FN})}
+# F_1 = \frac{\text{TP}}{\text{TP}+\frac{1}{2}(\text{FP} + \text{FN})}
 # ```
 # <!-- reference it by {eq}`f1` -->
 # 
-# The results are displayed below in {numref}`threshold`. We can see that a threshold factor of 0.33 results in the highest $F_1$-score of 0.995 over the training set.
+# The results of the gridsearch are displayed below in {numref}`threshold`.
+# 
 
 # In[10]:
 
@@ -640,49 +644,48 @@ plt.savefig(OUT_PATH+"contrast.png")
 output_filename_thresh_opt = OUT_PATH + "threshold_optimisation.csv"
 
 if compute_all:
-    open(output_filename_thresh_opt, "w").close() # Clear file
-    for st_scale in np.linspace(0.01, 1, 100):
-        fps, fns, tps, i = 0, 0, 0, 0
-        for key in waves.keys():
-            predictions, predictions_timestamps = streaming_classifier(
-                waves[key],
-                samprate,
-                lambda x,y: "R" if np.random.rand()<0.5 else "L",
-                input_buffer_size_sec = 0.05,
-                classification_window_size_sec = opt_det_window,
-                detection_window_size_sec = opt_det_window,
-                detection_window_offset_sec = 0,
-                calibration_window_size_sec = calibration_window_sec,
-                calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-                event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-                event_threshold_factor = st_scale, 
-                flip_threshold = True, 
-                consecutive_event_triggers = 3, 
-                consecutive_nonevent_reset = 10 
-            )
-            before_buffer = time_buffers_hump[key][0]
-            after_buffer = time_buffers_hump[key][1]
-            actual_times = [(time-before_buffer, time+after_buffer) for time in labels[key].time]
-            actual_leftovers = deepcopy(actual_times)
-            pred_leftovers = deepcopy(predictions_timestamps)
-            tps += len(actual_times)
-            for act_times in actual_times:
-                if act_times[1] < calibration_window_sec:
-                    actual_leftovers.remove(act_times)
-                    continue
-                for pred_times in predictions_timestamps:
-                    if (act_times[0] < pred_times[1] and act_times[1] > pred_times[0] and
-                        pred_times in pred_leftovers and act_times in actual_leftovers):
+    with open(output_filename_thresh_opt, "w") as file: # Clear file
+        for st_scale in np.linspace(0.01, 1, 100):
+            fps, fns, tps, i = 0, 0, 0, 0
+            for key in waves.keys():
+                predictions, predictions_timestamps = streaming_classifier(
+                    waves[key],
+                    samprate,
+                    lambda x,y: "R" if np.random.rand()<0.5 else "L",
+                    input_buffer_size_sec = 0.05,
+                    classification_window_size_sec = opt_det_window,
+                    detection_window_size_sec = opt_det_window,
+                    detection_window_offset_sec = 0,
+                    calibration_window_size_sec = calibration_window_sec,
+                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+                    event_threshold_factor = st_scale, 
+                    flip_threshold = True, 
+                    consecutive_event_triggers = 3, 
+                    consecutive_nonevent_reset = 10 
+                )
+                before_buffer = time_buffers_hump[key][0]
+                after_buffer = time_buffers_hump[key][1]
+                actual_times = [(t-before_buffer, t+after_buffer) for t in labels[key].time]
+                actual_leftovers = deepcopy(actual_times)
+                pred_leftovers = deepcopy(predictions_timestamps)
+                tps += len(actual_times)
+                for act_times in actual_times:
+                    if act_times[1] < calibration_window_sec:
                         actual_leftovers.remove(act_times)
-                        pred_leftovers.remove(pred_times)
-            tps -= len(actual_leftovers)
-            fns += len(actual_leftovers)
-            fps += len(pred_leftovers)
-            i += 1
-        fscore = tps/(tps+0.5*(fns+fps))
-        if (st_scale*100)%10 == 0:
-            print(st_scale, fscore)
-        with open(output_filename_thresh_opt, "a") as file:
+                        continue
+                    for pred_times in predictions_timestamps:
+                        if (act_times[0] < pred_times[1] and act_times[1] > pred_times[0] and
+                            pred_times in pred_leftovers and act_times in actual_leftovers):
+                            actual_leftovers.remove(act_times)
+                            pred_leftovers.remove(pred_times)
+                tps -= len(actual_leftovers)
+                fns += len(actual_leftovers)
+                fps += len(pred_leftovers)
+                i += 1
+            fscore = tps/(tps+0.5*(fns+fps))
+            if (st_scale*100)%10 == 0:
+                print(st_scale, fscore)
             file.write(f"{st_scale},{fscore}\n")
 
 
@@ -697,11 +700,11 @@ f_score_list = thresholds.f_score
 
 plt.figure(figsize=(7, 7))
 plt.plot(thresh_factors, f_score_list)
-plt.title("$F_1$-Score vs. Threshold Factor\n(Zero Crossings Calibration Statistic)")
+plt.title("$F_1$-Score vs. Threshold Factor\n for Zero Crossings")
 opt_thresh = np.mean(thresh_factors[f_score_list == np.max(f_score_list)])
 opt_fscore = np.max(f_score_list)
 plt.vlines(opt_thresh, 0, opt_fscore, "r", ":", 
-           label=f"Optimal Point ({round(opt_thresh, 2)}, {round(opt_fscore, 3)})")
+           label=f"Optimal Point ({round(opt_thresh, 2)}, {round(opt_fscore, 2)})")
 plt.hlines(opt_fscore, 0, opt_thresh, "r", ":")
 plt.xlabel("Threshold Factor")
 plt.ylabel("$F_1$-Score")
@@ -714,18 +717,16 @@ plt.savefig(OUT_PATH+"threshold.png")
 # scale: 75%
 # name: threshold
 # ---
-# Plot of the $F_1$-score for different threshold factors on the training set. The threshold is obtained by {eq]`thresh`. We find the highest $F_1$-score occurs when the threshold factor is 0.33.
+# Plot of the $F_1$-score for different threshold factors on the training set. The threshold is obtained by {eq}`thresh`. We find the highest $F_1$-score occurs when the threshold factor is 0.33.
 # ```
 # <!-- reference by {numref}`threshold` -->
 
-# #### Classification TO DO
-# 
-# <!-- for physics aspect just mention:
-# - again, what we predict the evaluation graph should look like
-# - we used a signal to filter the noise for one-three prong (mention its a physics thing to do when explaining classifier) -->
+# #### Classification
 # 
 
 # ##### Classifiers
+# 
+# Now that the event detection has been optimised, we must now optimise classification. To do this, the data science team developed five classifiers, each aiming to capture a different distinguishing feature identified by the physics team in their investigations {ref}`methods:exp`. In particular, *One Extrema* applies a Savitzky-Golay filter, as per the physicists' recommendations in {ref}`methods:findings`, and looks to identify whether the first turning point is a maximum (R) or minimum (L). *Two Extrema* does the same, but looks for a max followed by a min (R) or vice versa (L). *Max-Min* essentially does the same as *Two Extrema* but without filtering. *Max-Min-Range* applies a correction to *Max-Min* so that it only considers a point to be a maximum or minimum when it is above a certain threshold distance from the origin, governed by the `rng` parameter. The optimisation of this parameter can be found in {ref}`appendix:maxminrange`. Additionally, we developed a knn classifier, the optimisation of which can be found in {ref}`appendix:knn`. Finally, we implement a naive classifer for a baseline, which randomly predicts an event as either L or R.
 
 # In[12]:
 
@@ -740,32 +741,6 @@ y_labels = catch22_step_training_data.iloc[:,-1]
 neigh = KNeighborsClassifier(n_neighbors=5)
 neigh.fit(X_train, y_labels)
 
-# "Zeros" classifier
-# returns a list of sub-arrays, grouped by the same consecutive value
-# (in this case they are groups of consecutive 1s or -1s) 
-
-@njit # numba decorator that performs just-in-time (jit) compilation
-def consecutive(data, stepsize=0):                              
-    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
-
-# looks for the first sequence where the sign doesn't change for a period of time,
-# checks whether the average height is higher or lower than a threshold then classifies
-@njit 
-def zeroes_classifier(arr, samprate, downsample_rate=10, ave_height = 10, consec_seconds = 0.2):
-    arr_ds = arr[0::downsample_rate]
-    arr_sign = np.sign(arr_ds)            
-    i = 0
-    split_arrays = consecutive(arr_sign)  
-    for sub_arr in split_arrays:
-        if len(sub_arr) > consec_seconds * samprate / downsample_rate:  # RHS converts seconds to number of samples
-            # if there were 'consec_seconds' seconds of no zero-crossings,
-            # check if the average height is bigger than 'ave_height'
-            if np.mean(arr_ds[i:(i + len(sub_arr) - 1)]) > ave_height:          
-                return 'R'
-            elif np.mean(arr_ds[i:(i + len(sub_arr) - 1)]) < -1 * ave_height:
-                return 'L'
-        i += len(sub_arr)
-    return '_'   
 
 # calculates the 5 features selected from catch22, find the 5 nearest neighbours 
 # calculated using Euclidean distance, then selects the majority classification
@@ -782,7 +757,7 @@ def catch22_knn_classifier(arr, samprate, downsample_rate=10):
 
 # wave is smoothed using Savitzky-Golay Filter, then decides whether the event is
 # a left or right depending on whether the first turning point is a max or min
-def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
+def one_extrema_smoothing_classifier(arr, samprate, downsample_rate=10, window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
     fs = samprate/downsample_rate
     dt = 1/fs
@@ -831,7 +806,7 @@ def one_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, window_s
 
 # wave is smoothed using Savitzky-Golay Filter, then decides whether the event is
 # a left or right depending on the order of the maximum and minimum turning points
-def two_pronged_smoothing_classifier(arr, samprate, downsample_rate=10, 
+def two_extrema_smoothing_classifier(arr, samprate, downsample_rate=10, 
                                        window_size_seconds=0.3, max_loops=10):
     arr_ds = arr[0::downsample_rate]
     fs = samprate/downsample_rate
@@ -935,32 +910,40 @@ def max_min_range_classifier(arr, samprate, downsample_rate=10, rng = 35):
 
 
 # Prepare classifiers for optimisation and plotting
-classifiers = {"One-pronged": one_pronged_smoothing_classifier,
-               "Two-pronged": two_pronged_smoothing_classifier,
+classifiers = {"One-Extrema": one_extrema_smoothing_classifier,
+               "Two-Extrema": two_extrema_smoothing_classifier,
                "Max-Min": max_min_classifier,
                "Max-Min-Range": max_min_range_classifier,
-               "Zeros": zeroes_classifier,
                "KNN": catch22_knn_classifier,
                "Naive Random": lambda x,y: "R" if np.random.rand()<0.5 else "L"}
 
-classifier_parameters = {"One-pronged": {},
-               "Two-pronged": {},
+classifier_parameters = {"One-Extrema": {},
+               "Two-Extrema": {},
                "Max-Min": {},
                "Max-Min-Range": {"rng":35},
-               "Zeros": {"consec_seconds": 0.18, "ave_height": 25},
                "KNN": {},
                "Naive Random": {}}
 
-classifier_colours = {"One-pronged": "tab:blue",
-               "Two-pronged": "tab:cyan",
+classifier_colours = {"One-Extrema": "tab:blue",
+               "Two-Extrema": "tab:cyan",
                "Max-Min": "tab:olive",
                "Max-Min-Range": "tab:brown",
-               "Zeros": "tab:purple",
                "KNN": "tab:pink",
                "Naive Random": "tab:red"}
 
 
 # ##### Accuracy Metric
+# 
+# To estimate the accuracy of our classifier, we have opted to use weighted Levenshtein distance. The Levenshtein distance measures the minimum number of deletions, insertions or replacements required to transform one sequence into the other. Our metric weighs replacements and deletions more heavily than insertions, counting a replacement and a deletion as 1.25 and insertions as 0.5. When playing the game, a misclassification (fixed by replacement) would be quite costly, as the game would be doing the opposite of the instruction given. A false positive event (fixed by a deletion) where it detects an event when no instruction was given would also be costly. In contrast, a missed event (fixed by an insertion) is far less costly as the player can simply redo the eye movement. This justifies using the weighted Levenshtein distance to calculate accuracy. Once the weighted Levenshtein distance is calculated, the accuracy is computed using {eq}`lev`: 
+# 
+# ```{math}
+# :label: lev
+# a = \frac{l-D_{lv}}{l}
+# ```
+# <!-- reference it by {eq}`lev` -->
+# 
+# where $a$ is the accuracy, $l$ is the length of the actual sequence and $D_{lv}$ is the weighted Levenshtein distance.
+# 
 
 # In[14]:
 
@@ -980,7 +963,14 @@ def my_lev_dist(prediction, actual, sub_L_cost = 1.25, sub_R_cost = 1.25,
     return lev(prediction, actual, substitute_costs = substitute_costs, delete_costs = delete_costs)
 
 
+# ##### Latency Analysis
+# 
+# The actual time taken for each algorithm to classify is negligible when compared to the time taken for the classificaiton window to come in (see {ref}`appendix:time` for more information). This means the lag is dominated by the length of the classification window. Hence, the accuracy defined in {eq}`lev` must be balanced with a minimum classification window length to optimise the classifier's performance.
+# 
+# 
 # ##### Classifier Optimisation
+# 
+# Once the metric has been defined, a series of grid searches were performed for classifier to optimise the classification window size. Using the detection window as a base, an extension was applied on either side of the detection window to slowly widen the classification window. This extension was varied from 0s to 1.65s in increments of 0.00825s and the accuracy at each step is shown in {numref}`classifier`.
 
 # In[15]:
 
@@ -1046,7 +1036,7 @@ for classifier in results.classifier.unique():
     optimal_cl_windows[classifier] = optimal_cl_window
     
     plt.plot(results_agg[filt].window_size, signal.savgol_filter(results_agg[filt].accuracy, 15, 1),
-             label=classifier + f" ({round(optimal_cl_window, 2)},{round(max_val, 2)})", 
+             label=classifier + f" ({round(optimal_cl_window, 2)},{min(round(max_val, 2), 1.0)})", 
              color=classifier_colours[classifier])
     plt.vlines(optimal_cl_window, 0, max_val, color=classifier_colours[classifier], linestyle="--", alpha=0.3)
     
@@ -1069,11 +1059,16 @@ plt.savefig(OUT_PATH+"classifier.png")
 # name: classifier
 # ---
 # Training accuracy of each classifier as a function of classification window length. The classification window is lower bounded by the detection window, represented by the shaded region.
-# Ideally, we want to minimise window length while maximising accuracy. With this in mind, we see that the Max-Min-Range classifier has the highest accuracy at a window length equal to be the lowerbound of 0.35 seconds. This makes it the most optimal classifier by both accuracy and latency.
+# Ideally, we want to minimise window length while maximising accuracy. With this in mind, we see that the Max-Min-Range classifier has the highest accuracy at a window length equal to be the lowerbound of 0.43s. This makes it the most optimal classifier by both accuracy and latency.
 # ```
 # <!-- reference by {numref}`classifier` -->
 
 # #### Evaluation
+# 
+# Now that we have optimised each classifier using the training set, we must assess each classifier's out-of-sample performance. To do this, we calculate the average accuracy on the test set. We found that Max-Min had the highest accuracy of 90% with a window size of 1.23s, closely followed by Max-Min-Range at 88% with a window size of 0.43s (the full results can be found in {ref}`appendix:test`). 
+# 
+# Since Max-Min-Range has good accuracy with a significantly lower window size, we choose it as the classifier to deploy within our game.
+# 
 
 # In[17]:
 
@@ -1115,58 +1110,73 @@ test_results = pd.read_csv(output_filename_tst_res, header=None)
 test_results.columns = ["Classifier", "File", "Predicted", "Actual", "Weighted Levenshtein Distance", "Accuracy"]
 
 test_results = test_results.pivot(index = "File", columns='Classifier', values='Accuracy')
-test_results.loc['Total']= test_results.mean()
-test_results
+
+top_accs = test_results.mean().sort_values(ascending=False)
+top = test_results.mean().sort_values(ascending=False).index
+top_windows = [optimal_cl_windows[k] for k in test_results.mean().sort_values(ascending=False).index]
+
+top_df = pd.DataFrame()
+
+top_df["Classifier"] = top
+top_df["Accuracy"] = np.round(np.array(top_accs), 2)
+top_df["Window Length (s)"] = np.round(np.array(top_windows), 2)
 
 
 # ## Summary of results
-
-# ### Physics Analysis Findings: TO DO
 # 
-# Adapting the final experimental design after testing as the larger loop in the workflow suggests:
-# - Calibration instead of normalisation (explain why we did this in a senetence e.g. normalisation only scaled the egneerated signal to specific bounds, but the scale of the signal played no roll in event detection)
-# - Post it notes (placed beyond 45 degrees from central viewing line)
-# - Speed of eye movements (fast but no quantitative value)
-# - Electrode placement (3 cm apart at least)
-# - Filter
+# After experimenting with different methods of data collection, we found the best data collection method involved spacing the electrodes 3cm apart. Furthermore, performing quick movements produced the clearest signal and limiting movements to left and right simplified the classifier so that we could effectively achieve the aim.
 # 
-# Other factors that we are aware will affect the ouput:
-# - blinking (didnt do anything as was not often they were detectable)
-# - facial movements (ensured we used a detection metric that would not classify increased noise and amplitude as an event such as zero-crossings, which just so happened to be best performing metric anyway).
+# Using the data collected, we found the optimal test statistic was zero crossings at a detection window size of 0.43s with a threshold factor was 0.33, show in {numref}`contrast` and {numref}`threshold`. We decided to use the Max-Min-Range classifier with a classification window size equal to the aforementioned detection window. We chose this classifier because of its excellent performance in both accuracy and latency, which will make our game accurate and responsive.
 # 
-# ...thus we ask users to play still, emphasising left and right movements.
-
-# ### Data analysis finding TO DO
+# Finally, to integrate the classifier into Space Invaders, we adapted a team member’s existing Java implementation into Python. The optimised Max-Min-Range classifier was then merged with the game. Despite both working well independently, the combined product was initially quite laggy. This was resolved by running the classifier and game separately and having them interact via inter-process communication. Details of the deployment can be found in {ref}`appendix:deployment`.
 # 
-# Results for data
 
 # ## Discussion 
 
-# Initially, we used the Spike Recorder software to create and evaluate our data pipeline’s performance. But when we moved to the Python software (we had to do this because we had to integrate it with the rest of our Python code), we saw that the data was completely different. Both the threshold and shape of the signals varied between the two. This led to us re-evaluating all of the parameters of the data pipeline. We also had to perform normalisation on the new data. 
+# Initially, the Spike Recorder software was used to record the training dataset. However, the data was drastically different when transitioning to live data from Python. Both the threshold and shape of the signals varied between the two. This led to us executing the entire pipeline outlined in {numref}`flow` again with new data recorded directly from Python. 
 # 
-# We noticed that the data obtained from the Python software had a tendency to be volatile: the random noise varied greatly at different times. To solve this issue, we calibrated our data pipeline by asking the player to keep their eyes still for 5 seconds. This allowed us to measure the amount of random noise at each particular time and hence we were able to adjust our parameters accordingly. Additionally, a few of our classifiers filter out the random noise in the data and make the waves smooth. The main cause of the random noise was, in our experience, some SpikerBoxes not working properly. So, we could reliably eliminate the volatility of the random noise by finding a SpikerBox that worked well.
+# The data obtained from the Python software had a tendency to be volatile as the random noise varied greatly with different people. This was solved by the physicists recommendation of a calibration period; having the player keep their eyes still for 5s at the start of play. This allowed us to define the threshold more robustly using {eq}`thresh`. Additionally, some classifiers aimed to address noise by using a Savitzky-Golay filter.
 # 
-# Latency was a major problem in the initial stages of this project. There was a significant time delay between the eye movement and the `streaming_classifier` function being able to classify the eye movement. This was overcome by significantly reducing the window size. Additionally, when running the `streaming_classifier` function and the game in one file, we encountered significant latency. We resolved this by separating the function and the game into different files and running them at the same time. They interface through the use of inter-process communication.
+# Latency was a major problem in the initial stages of this project. There was a significant time delay between the eye movement and the `streaming_classifier` function being able to classify the eye movement. This was overcome by significantly reducing the window size. Additionally, when running the `streaming_classifier` function and the game in one file, we encountered significant lag. We resolved this by separating the function and the game into different files, running them simultaneously and interfacing them using inter-process communication detailed in {ref}`appendix:deployment`.
 # 
-# Our final product for this project was a foundation model of Space Invaders. Future modifications to the game will include extra controls such as blinking or muscle movements to implement controlled shooting since we currently have smart shooting in the game which is continuous shooting unless the spaceship’s location is beneath a barrier. A multiplayer version will attract further attention as there will be an added level of competition. Another upgrade will be to include power ups such as having the ability to vary the speed of the spaceship in successive levels which will be implemented with arm muscle movements and how hard the players clenches their fist. Improvements to the actual programming aspect of the game will be to remove the use of named pipes and make it function as one application.  
-# 
+# We focused on optimising the core mechanics of left and right eye movements. In future, additional features could be added to the game such as blinking or muscle movements to implement controlled shooting. Multiplayer could also be implemented in a similar way. Making the game a self-contained application would also improve the ease of use for a consumer market. 
 
 # ## Conclusion
 
-# Physics and data science students collaborated to develop a modern twist on the classic arcade game Space Invaders, where the players now control the game with their eyes. Through data collection, developing a classifier and evaluating the classifier, we were able to create a functioning game that utilises left and right eye movements. Due to the time restrictions, we were limited in the amount of controls we were able to implement, however, we aspire to develop future upgrades to the game. These include having controlled shooting which will be executed by another control such as blinks or muscle movements, imposing a multiplayer option and power ups in the game such as varying the speed of the spaceship. Despite the challenging nature of this project, we were able to combine data science and physics expertise to develop a very successful final product.  
+# Throughout this project, physics and data science disciplines collaborated to achieve the aim of developing prototype of gesture-controlled Space Invaders. By developing and evaluating numerous classifiers using curated data from the physicists, we were able to develop a fast and accurate classifier for use in a functioning game. Due to the time restrictions, we were limited in the amount of controls we were able to implement, having only left and right eye movements. However, we aspire to develop future upgrades to the game. These include having user-inputted shooting executed by another control such as blinks or muscle movements and creating a multiplayer option. Despite the challenging nature of this project, we were able to combine data science and physics expertise to develop a very successful final product.
 
-# ## Space Invaders!
+# ## Contributions
+# 
+# Student 490423356 was responsible for editing the given python streaming code to save the input as a wav file, and automate logging the time keys were pressed during data collection (key presses were used to signal the event an eye movement). They aided in the construction and implementation of physical experiments to determine the most appropriate final experimental design.They implemented an event detection method which uses Fourier transforms, that was evaluated by the group in the test statistic graphical analysis. They performed research on six different types of normalisation techniques that could be used for preprocessing an input signal. Some of these were transformed into event detection statistics, such as Z-Score. They additionally proposed the idea to have a calibration period, which the group agreed is a better method to generalise the signal for all users rather than normalisation. They designed and implemented an adaptation of the existing two and three extrema classifiers, to make them more robust to unexpected changes in the signal. This student wrote the speech for the final presentation. They were also responsible for organising meeting times and having the PowerPoint ready for each Monday presentation (with help from other group members).
+# 
+# Student 490413128: Wrote the Max-Min classifier and the Max-Min-Range classifier. Significantly contributed to writing the code for the evaluation. Researched and implemented Inter-Process Communication. Collected a lot of data. Contributed significantly to writing the discussion section. Helped in writing the methods section. Wrote the results section of the report. Rewrote the executive summary so that the report fell within the word limit. Helped in creating the Powerpoint for each Monday presentation.
+# 
+# 480366780 contributed to this project through generating reliable and robust data that was used to evaluate the accuracy of the classifiers. They worked on finding distinct signals that we were able to be incorporated as the controls of the game. They evaluated the optimal positioning of the electrodes and distance the eye must move to generate the clearest and most noticeable signals. They created a survey that allowed us to gain a better understanding of the public’s interest towards our project which also helped shape our motivation. They helped with implementing Fourier transforms as an alternative option for event detection and aided in the research of using pipes. They created the slides for the final presentation, helped write the speech and wrote parts of the final report. They also helped research Inter-Process Communication. 
+# 
+# Student 490155963 contributed to this project by converting the Space Invaders he had from Java into Python. He also helped with recording some of the data. He was the primary team member working on merging the classifier and game together, and reducing the lag the combined product was producing. He implemented the classifier on the game with the help of a pipe data processing structure.
+# 
+# Student 490388088 contributed to this project by exploring a machine-learning alternative to the rule-based classifiers the other data science members made. He explored how to use catch22, performed feature selection, and created a k-nearest neighbours classifier to complement the other classifiers. He also made great contributions to the editing of the report to ensure it flowed and well represented the project as a whole.
+# 
+# Student 480380144: Developed the structure for our streaming classifier, translating it from R. Also designed the data science pipeline to optimise our classifiers. This involved designing and performing experiments to optimise for each of the parameters in the streaming classifier, specifically detection and classification window lengths. Additionally, they played a key role in writing our report, despite breaking their hand two weeks from the due date which meant they could only work effectively on it a few days out from the due date. Their report contributions included setting up Jupyter Book and interlacing the sections with the code for reproducibility. Overall, their most important contribution was providing direction to our group. By laying out the experimental pipeline, it allowed all group members to contribute to the final product more effectively.
+# 
+# 
+# 
+# 
 
 # ## Appendix
+
+# (appendix:deployment)=
+# ### Space Invaders Deployment Code
+# 
+# Below is the final classifier used in the game, as well as a link to the game itself and the functions used to connect the two with inter-process communication.
+# 
 
 # In[18]:
 
 
+# Code for inter-process communication between the game and the classifier.
 def encode_msg_size(size: int) -> bytes:
     return struct.pack("<I", size)
-
-def decode_msg_size(size_bytes: bytes) -> int:
-    return struct.unpack("<I", size_bytes)[0]
 
 def create_msg(content: bytes) -> bytes:
     size = len(content)
@@ -1176,57 +1186,27 @@ def create_msg(content: bytes) -> bytes:
 # In[19]:
 
 
-def plot_labelled_wave(wav_array, samprate, labels_dat, ax, i, title="", calibration_seconds = 5, 
-                       before_buffer = 1, after_buffer = 1, shade_alpha=0.2, wave_alpha=1, 
-                       ymin = -512, ymax = 512):
-    time_seq = np.linspace(1, len(wav_array), len(wav_array))/samprate
-    
-    # Calibration period
-    calibration_bool = time_seq < calibration_seconds
+# Functions for Serial
+def read_arduino(ser,inputBufferSize):
+#     data = ser.readline((inputBufferSize+1)*2)
+    data = ser.read((inputBufferSize+1)*2)
+    out =[(int(data[i])) for i in range(0,len(data))]
+    return out
 
-    # Get locations of events
-    left_events_bool = np.array([False]*len(time_seq))
-    for time in labels_dat.time[labels_dat.label == "L"]:
-        left_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | left_events_bool
-    right_events_bool = np.array([False]*len(time_seq))
-    for time in labels_dat.time[labels_dat.label == "R"]:
-        right_events_bool = ( (time_seq > time - before_buffer) & (time_seq < time+after_buffer) ) | right_events_bool
-
-    # Plot wave with events
-    ax[i].plot(time_seq, wav_array, alpha=wave_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = left_events_bool,
-                     color = 'g',
-                     label = "Left",
-                     alpha=shade_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = right_events_bool,
-                     color = 'r',
-                     label = "Right",
-                     alpha=shade_alpha)
-    ax[i].fill_between(time_seq, ymax, ymin,
-                     where = calibration_bool,
-                     color = 'y',
-                     label = "Calibration",
-                     alpha=shade_alpha)
-    ax[i].set_title(title)
-        
-
-fig, ax = plt.subplots(8, 1)
-fig.set_size_inches(16, 10)
-for i, key in enumerate(sorted(waves.keys())):
-    plot_labelled_wave(
-        waves[key], samprate, labels[key], ax, i, title=key, before_buffer = time_buffers_whole[key][0],
-        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
-    )
-for i, key in enumerate(sorted(test_waves.keys())):
-    plot_labelled_wave(
-        test_waves[key], samprate, test_labels[key], ax, i+6, title=key, before_buffer = time_buffers_whole[key][0],
-        after_buffer = time_buffers_whole[key][1], shade_alpha=0.2, wave_alpha=1, ymin = -100, ymax = 100
-    )
-ax[0].legend()
-fig.tight_layout()
-fig.savefig(OUT_PATH + "dataset_plot.png")
+def process_data(data):
+    data_in = np.array(data)
+    result = []
+    i = 1
+    while i < len(data_in)-1:
+        if data_in[i] > 127:
+            # Found beginning of frame
+            # Extract one sample from 2 bytes
+            intout = (np.bitwise_and(data_in[i],127))*128
+            i = i + 1
+            intout = intout + data_in[i]
+            result = np.append(result,intout)
+        i=i+1
+    return np.flip(np.array(result)-512)
 
 
 # In[20]:
@@ -1235,117 +1215,121 @@ fig.savefig(OUT_PATH + "dataset_plot.png")
 # Final classifier used for Space Invaders
 
 # Connect to spiker box - change to match port
-cport = "/dev/cu.usbserial-DJ00E33Q"
-baudrate = 230400
-ser = serial.Serial(port=cport, baudrate=baudrate)    
-inputBufferSize = 1000   # 20000 = 1 second
-buffer_size_sec = inputBufferSize/20000.0
-ser.timeout = buffer_size_sec  # set read timeout 20000
+# cport = "/dev/cu.usbserial-DJ00E33Q"
+# baudrate = 230400
+# ser = serial.Serial(port=cport, baudrate=baudrate)    
+# inputBufferSize = 1000   # 20000 = 1 second
+# buffer_size_sec = inputBufferSize/20000.0
+# ser.timeout = buffer_size_sec  # set read timeout 20000
 
-classifier_label = "Max-Min-Range"
-offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
-buffer_size = 0.05
-streaming_classifier(
-    ser,
-    samprate,
-    classifiers[classifier_label],
-    classifier_params=classifier_parameters[classifier_label],
-    input_buffer_size_sec = buffer_size_sec,
-    classification_window_size_sec = optimal_cl_windows[classifier_label],
-    detection_window_size_sec = opt_det_window,
-    detection_window_offset_sec = offset,
-    calibration_window_size_sec = calibration_window_sec,
-    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-    event_threshold_factor = opt_thresh, 
-    flip_threshold = True, 
-    consecutive_event_triggers = 3, 
-    consecutive_nonevent_reset = 10,
-    live = True,
-    FIFO_filename = "space_invaders_ipc",
-    create_FIFO_msg = None,
-    )
+# classifier_label = "Max-Min-Range"
+# offset = (optimal_cl_windows[classifier_label] - opt_det_window)/2
+# buffer_size = 0.05
+# streaming_classifier(
+#     ser,
+#     samprate,
+#     classifiers[classifier_label],
+#     classifier_params=classifier_parameters[classifier_label],
+#     input_buffer_size_sec = buffer_size_sec,
+#     classification_window_size_sec = optimal_cl_windows[classifier_label],
+#     detection_window_size_sec = opt_det_window,
+#     detection_window_offset_sec = offset,
+#     calibration_window_size_sec = calibration_window_sec,
+#     calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+#     event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+#     event_threshold_factor = opt_thresh, 
+#     flip_threshold = True, 
+#     consecutive_event_triggers = 3, 
+#     consecutive_nonevent_reset = 10,
+#     live = True,
+#     FIFO_filename = "space_invaders_ipc",
+#     create_FIFO_msg = create_msg,
+#     read_arduino = read_arduino,
+#     process_data = process_data
+#     )
 
 
-# (appendix:knn)=
-# ### KNN Optimisation
+# The game can be found in the Space_Invaders subfolder within the report folder. To run the game, run space_invaders.py in one terminal, and run the code defined above in another **in that order**. You will need to ensure the Spiker Box is connected to the correct port via the Serial python package. 
+
+# (appendix:test)=
+# ### Test Set Accuracies
+# Below are the accuracies for all classifiers on the test set, along with their optimal window sizes.
+
+# In[21]:
+
+
+top_df
+
+
+# (appendix:time)=
+# ### Latency Analysis
 # 
-# Below is the code used to perform feature selection on the features calculated using catch22 for the kNN classifier. An external set of data was used to determine these features as to not bias the optimisation process undertaken in 4.2.3.
-# This feature data was saved to `catch22_step_selected_features.csv` for use in the kNN classifier. The method undertaken to perform feature selection is described in {cite}`kaggle`.
+# Below is the plot showing how long each classifier took to classify every event in the training set. Since the order of magnitude is milliseconds, this justifies focusing on minimising window length as that is of order seconds.
 
-# In[ ]:
+# In[22]:
 
 
-# Using backward stepwise feature selection from catch22 for kNN classifier 
+buffer_size_sec = 0.05
+all_classification_times = {}
+better_all_classification_times = {}
+for classifier_label, classifier in classifiers.items():
+    start = time.time()
+    for i, key in enumerate(waves):
+        predictions, predictions_timestamps, times = streaming_classifier(
+            waves[key],
+            samprate,
+            classifiers[classifier_label],
+            classifier_params=classifier_parameters[classifier_label],
+            input_buffer_size_sec = buffer_size_sec,
+            classification_window_size_sec = opt_det_window,
+            detection_window_size_sec = opt_det_window,
+            detection_window_offset_sec = 0,
+            calibration_window_size_sec = 5,
+            calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
+            event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
+            event_threshold_factor = opt_thresh, 
+            flip_threshold = True, 
+            store_times = True,
+            consecutive_event_triggers = 3, 
+            consecutive_nonevent_reset = 10,
+            live = False,
+        )
 
-# import decision tree classifier to model fitting and recursive feature exclusion (stepwise selection)
+        if classifier_label in better_all_classification_times.keys():
+            better_all_classification_times[classifier_label] += times
 
-KNN_DATA_PATH = IN_PATH + "KNN/"
+        else:
+            better_all_classification_times[classifier_label] = times
 
-knn_names = ['left-middle-right-middle#2', 'left-middle-right-middle', 'left-middle-right-steph', 
-            'left-middle-right-steph2', 'left-middle', 'left-right-middle-marina', 'left-right-middle-marina2', 
-            'left-right-middle-marina3', 'left-right-middle-sandeep', 'right-middle']
 
-# Load the data
-knn_waves, knn_labels = load_data(
-    KNN_DATA_PATH, knn_names, scale_factor = 1, shift_factor = -512, fix_alessandro=False)
-
-# Define sample rate: 10,000 Hz
-samprate = 10_000
-
-# Extract events from training data
-before_buffer = 0.5
-after_buffer = 1
-    
-events = [] # list of events in terms of slice of wav_array
-event_labels = [] # list of labels
-
-for key in knn_labels:
-    wave = knn_waves[key]
-    label = knn_labels[key]
-    for lab, time in zip(label.label, label.time):
-        event_labels.append(lab)
-        event_start = int((time - before_buffer) * samprate) # in terms of sampling rate
-        event_end = int((time + after_buffer) * samprate) # in terms of sampling rate
-
-        events.append(wave[event_start:event_end])
+        if "times" in all_classification_times.keys():
+            all_classification_times["times"].append(times)
+            all_classification_times["classifier"].append(classifier_label)
+        else:
+            all_classification_times["times"] = []
+            all_classification_times["classifier"] = []
+            all_classification_times["times"].append(times)
+            all_classification_times["classifier"].append(classifier_label)
         
-# Compute catch22 features and convert to dataframe
-features = []
-for event in events:
-    event_ds = event[0::10] # downsample by a rate of 10
-    feature = catch22_all(event_ds)
-    features.append(feature['values'])
+for key, val in better_all_classification_times.items():
+    better_all_classification_times[key] = np.array(val)/1e6
 
-features_df = pd.DataFrame(features)
-features_df.columns = feature['names']
+plt.figure(figsize=(10, 5))
+plt.boxplot(better_all_classification_times.values(), labels = better_all_classification_times.keys())
+plt.ylabel("Time Taken (ms)")
+plt.xlabel("Classifier")
+plt.title("Time Taken to Classify Each Event (Classification Window Length of 0.43s)")
+plt.savefig(OUT_PATH+"classifier_times.png")
 
-# fit the model
-clf = DecisionTreeClassifier(random_state=420)
-clf.fit(features_df, event_labels)
 
-# Python backward stepwise selection
-trans = RFECV(clf, cv=5)
-features_trans = trans.fit_transform(features_df, event_labels)
-
-print(features_trans.shape)
-columns_retained = features_df.iloc[:, :].columns[trans.get_support()].values
-print(columns_retained)
-
-# create df to save as csv for kNN classifier
-selected_features_df = pd.DataFrame(features_trans)
-selected_features_df.columns = columns_retained
-selected_features_df['labels'] = event_labels
-
-# selected_features_df.to_csv(DEP_PATH+'catch22_step_selected_features.csv',index=False)
-
+# ![times](../report_outputs/classifier_times.png)
 
 # (appendix:consecutive)=
 # ### Triggers and Reset Optimisation
 # 
 # Below is the gridsearch used to optimise `consecutive_event_triggers` and `consecutive_nonevent_reset`. We chose the minimum pair with optimal f score of 0.993 - (3, 10). A minimum pair minimises latency.
 
-# In[ ]:
+# In[23]:
 
 
 # Gridsearch to optimise consecutive_event_triggers and consecutive_nonevent_reset
@@ -1402,11 +1386,84 @@ if compute_all:
         
 
 
+# (appendix:knn)=
+# ### KNN Optimisation
+# 
+# Below is the code used to perform feature selection on the features calculated using catch22 for the kNN classifier. An external set of data was used to determine these features as to not bias the optimisation process undertaken in {ref}`methods:opt`.
+# This feature data was saved to `catch22_step_selected_features.csv` for use in the kNN classifier. The method undertaken to perform feature selection is described in {cite}`kaggle`.
+
+# In[24]:
+
+
+# Using backward stepwise feature selection from catch22 for kNN classifier 
+
+# import decision tree classifier to model fitting and recursive feature exclusion (stepwise selection)
+
+KNN_DATA_PATH = IN_PATH + "KNN/"
+
+knn_names = ['left-middle-right-middle#2', 'left-middle-right-middle', 'left-middle-right-steph', 
+            'left-middle-right-steph2', 'left-middle', 'left-right-middle-marina', 'left-right-middle-marina2', 
+            'left-right-middle-marina3', 'left-right-middle-sandeep', 'right-middle']
+
+# Load the data
+knn_waves, knn_labels = load_data(
+    KNN_DATA_PATH, knn_names, scale_factor = 1, shift_factor = -512, fix_alessandro=False)
+
+# Define sample rate: 10,000 Hz
+samprate = 10_000
+
+# Extract events from training data
+before_buffer = 0.5
+after_buffer = 1
+    
+events = [] # list of events in terms of slice of wav_array
+event_labels = [] # list of labels
+
+for key in knn_labels:
+    wave = knn_waves[key]
+    label = knn_labels[key]
+    for lab, t in zip(label.label, label.time):
+        event_labels.append(lab)
+        event_start = int((t - before_buffer) * samprate) # in terms of sampling rate
+        event_end = int((t + after_buffer) * samprate) # in terms of sampling rate
+
+        events.append(wave[event_start:event_end])
+        
+# Compute catch22 features and convert to dataframe
+features = []
+for event in events:
+    event_ds = event[0::10] # downsample by a rate of 10
+    feature = catch22_all(event_ds)
+    features.append(feature['values'])
+
+features_df = pd.DataFrame(features)
+features_df.columns = feature['names']
+
+# fit the model
+clf = DecisionTreeClassifier(random_state=420)
+clf.fit(features_df, event_labels)
+
+# Python backward stepwise selection
+trans = RFECV(clf, cv=5)
+features_trans = trans.fit_transform(features_df, event_labels)
+
+print(features_trans.shape)
+columns_retained = features_df.iloc[:, :].columns[trans.get_support()].values
+print(columns_retained)
+
+# create df to save as csv for kNN classifier
+selected_features_df = pd.DataFrame(features_trans)
+selected_features_df.columns = columns_retained
+selected_features_df['labels'] = event_labels
+
+# selected_features_df.to_csv(DEP_PATH+'catch22_step_selected_features.csv',index=False)
+
+
 # (appendix:maxminrange)=
 # ### Max-Min-Range Optimisation
 # The following code performs a grid search to optimise the `rng` threshold for the Max-Min-Range classifier. The `rng` threshold is varied from 0 to 100 in increments of 1, and the corresponding weighted Levenshtein accuracies are plotted.
 
-# In[ ]:
+# In[25]:
 
 
 classifiers1 = {"Max-Min-Range": max_min_range_classifier}
@@ -1431,9 +1488,9 @@ if compute_all:
                     classifiers[classifier_label],
                     classifier_params={"rng" : range_threshold},
                     input_buffer_size_sec = buffer_size_sec,
-                    classification_window_size_sec = 0.46,  #opt_det_window + 0.01
-                    detection_window_size_sec = 0.45,       #opt_det_window
-                    detection_window_offset_sec = 0.005,   #offset ^ uncomment it above
+                    classification_window_size_sec = opt_det_window,  #opt_det_window + 0.01
+                    detection_window_size_sec = opt_det_window,       #opt_det_window
+                    detection_window_offset_sec = 0,   #offset ^ uncomment it above
                     calibration_window_size_sec = 5,
                     calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
                     event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
@@ -1484,197 +1541,11 @@ if compute_all:
     plt.title("Classifier Accuracy vs. Range Threshold for Window Size of 0.46 Seconds")
 
 
-# (appendix:zeros)=
-# ### Zeros Optimisation
-# The following code performs a grid search to optimise the `consec_seconds` threshold for the Zeros classifier. The `rng` threshold is varied from 0.001 to 0.5, and the corresponding weighted Levenshtein accuracies are plotted. Note: we assume that the `consec_seconds` and `ave_height` are independent, which seems reasonable. This allows us to optimise them separately.
-
-# In[ ]:
-
-
-classifiers2 = {"Zeros": zeroes_classifier}
-
-file_accuracies = {}
-
-buffer_size_sec = 0.05
-if compute_all:
-    for classifier_label, classifier in classifiers2.items():
-        print(classifier_label)
-        for consec_threshold in np.linspace(0.001, 0.5, 100):
-            print("\nCurrent Consec Threshold:", consec_threshold)
-
-    #         hyp_consecutive_triggers = int(np.ceil(det_window/buffer_size))
-
-            current_accuracies = []
-            for i, key in enumerate(waves):
-                
-                predictions, predictions_timestamps = streaming_classifier(
-                    waves[key],
-                    samprate,
-                    classifiers[classifier_label],
-                    classifier_params={"consec_seconds": consec_threshold, "ave_height": 25},
-                    input_buffer_size_sec = buffer_size_sec,
-                    classification_window_size_sec = 0.46,  #opt_det_window + 0.01
-                    detection_window_size_sec = 0.45,       #opt_det_window
-                    detection_window_offset_sec = 0.005,   #offset
-                    calibration_window_size_sec = 5,
-                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-                    event_threshold_factor = 0.33,          #opt_thresh 
-                    flip_threshold = True, 
-                    consecutive_event_triggers = 3, 
-                    consecutive_nonevent_reset = 10,
-                    live = False,
-                )
-
-                actuals = "".join(labels[key].label)
-                lev_dist = my_lev_dist(predictions, actuals)
-                acc = max((len(actuals) - lev_dist), 0)/len(actuals)
-                current_accuracies.append(acc)
-            if consec_threshold in file_accuracies:
-                file_accuracies[consec_threshold] += current_accuracies
-            else:
-                file_accuracies[consec_threshold] = current_accuracies
-
-
-    ave_accuracies_per_consec_val = {}
-    for consec_thresh, acc_each_file_ls in file_accuracies.items():
-        ave_accuracies_per_consec_val[consec_thresh] = sum(acc_each_file_ls) / len(acc_each_file_ls)
-
-    print("done")
-
-    best_consecs = []
-    best_value = 0
-    for acc in ave_accuracies_per_consec_val.values():
-        if round(acc, 5) > round(best_value, 5):  #need to round because python maintains its floats very imprecisly
-            best_value = acc
-
-    for key, value in ave_accuracies_per_consec_val.items():
-        if round(value, 5) == round(best_value, 5):
-            best_consecs.append(key)
-
-    plt.figure(figsize=(10, 10))
-    plt.plot(ave_accuracies_per_consec_val.keys(), ave_accuracies_per_consec_val.values())
-    if len(best_consecs) > 1:
-        plt.vlines(best_consecs[0], 0, best_value, linestyle=":", label=f"Best Consecs: {round(best_consecs[0], 2)} to {round(best_consecs[len(best_consecs) - 1], 2)}, Accuracy = {round(best_value, 2)}")
-        plt.vlines(best_consecs[len(best_consecs) - 1], 0, best_value, linestyle=":")
-        plt.axvspan(best_consecs[0], best_consecs[len(best_consecs) - 1], alpha=0.1, color='red')
-    else:
-        plt.vlines(best_consecs[0], 0, best_value, linestyle=":", label=f"Best Consec: {round(best_consecs[0], 2)}, Accuracy = {round(best_value, 2)}")
-
-    plt.legend(loc = "lower right")
-    plt.ylabel("Weighted Levenshtein Accuracy")
-    plt.xlabel("'Consec' Threshold (in seconds)")
-    plt.title("Classifier Accuracy vs. Consec Threshold for Window Size of 0.46 Seconds")
-
-
-# The following code performs a grid search to optimise the `ave_height` threshold for the Max-Min-Range classifier. The `ave_height` threshold is varied from 0 to 6 in increments of 1, and the corresponding weighted Levenshtein accuracies are plotted. Note: we assume that the `consec_seconds` and `ave_height` are independent, which seems reasonable. This allows us to optimise them separately.
-
-# In[ ]:
-
-
-classifiers2 = {"Zeros": zeroes_classifier}
-
-file_accuracies = {}
-
-buffer_size_sec = 0.05
-if compute_all:
-    for classifier_label, classifier in classifiers2.items():
-        print(classifier_label)
-        for height_threshold in np.linspace(0, 100, 101):                                
-            print("\nCurrent Height Threshold:", height_threshold)
-
-    #         hyp_consecutive_triggers = int(np.ceil(det_window/buffer_size))
-
-            current_accuracies = []
-            for i, key in enumerate(waves):
-                
-                predictions, predictions_timestamps = streaming_classifier(
-                    waves[key],
-                    samprate,
-                    classifiers[classifier_label],
-                    classifier_params={"consec_seconds": 0.18, "ave_height": height_threshold},
-                    input_buffer_size_sec = buffer_size_sec,
-                    classification_window_size_sec = 0.46,   #opt_det_window + 0.01
-                    detection_window_size_sec = 0.45,        #opt_det_window
-                    detection_window_offset_sec = 0.005,   #offset
-                    calibration_window_size_sec = 5,
-                    calibration_statistic_function = lambda x: ts_zero_crossings(x)/len(x),
-                    event_test_statistic_function = lambda x: ts_zero_crossings(x)/len(x), 
-                    event_threshold_factor = 0.33,          #opt_thresh 
-                    flip_threshold = True, 
-                    consecutive_event_triggers = 3, 
-                    consecutive_nonevent_reset = 10,
-                    live = False,
-                )
-
-                actuals = "".join(labels[key].label)
-                lev_dist = my_lev_dist(predictions, actuals)
-                acc = max((len(actuals) - lev_dist), 0)/len(actuals)
-                current_accuracies.append(acc)
-            if height_threshold in file_accuracies:
-                file_accuracies[height_threshold] += current_accuracies
-            else:
-                file_accuracies[height_threshold] = current_accuracies
-
-
-    ave_accuracies_per_height_val = {}
-    for height_thresh, acc_each_file_ls in file_accuracies.items():
-        ave_accuracies_per_height_val[height_thresh] = sum(acc_each_file_ls) / len(acc_each_file_ls)
-
-    print("done")
-
-    best_heights = []
-    best_value = 0
-    for acc in ave_accuracies_per_height_val.values():
-        if round(acc, 5) > round(best_value, 5):  #need to round because python maintains its floats very imprecisly
-            best_value = acc
-
-    for key, value in ave_accuracies_per_height_val.items():
-        if round(value, 5) == round(best_value, 5):
-            best_heights.append(key)
-
-    plt.figure(figsize=(10, 10))
-    plt.plot(ave_accuracies_per_height_val.keys(), ave_accuracies_per_height_val.values())
-    if len(best_heights) > 1:
-        plt.vlines(
-            best_heights[0], 0, best_value, linestyle=":", 
-            label="Best Heights: {} to {}, Accuracy = {}".format([round(best_heights[0], 2),
-                                                                  round(best_heights[len(best_heights) - 1], 2),
-                                                                  round(best_value, 2)]))
-        plt.vlines(best_heights[len(best_heights) - 1], 0, best_value, linestyle=":")
-        plt.axvspan(best_heights[0], best_heights[len(best_heights) - 1], alpha=0.1, color='red')
-    else:
-        plt.vlines(
-            best_heights[0], 0, best_value, linestyle=":", 
-            label="Best Height: {}, Accuracy = {}".format([round(best_heights[0], 2),
-                                                                  round(best_value, 2)]))
-
-
-    plt.legend(loc = "lower right")
-    plt.ylabel("Weighted Levenshtein Accuracy")
-    plt.xlabel("'Height' Threshold")
-    plt.title("Classifier Accuracy vs. Height Threshold for Window Size of 0.46 Seconds")
-
-
 # ## References 
 # 
-# {cite}`numpy`
-# {cite}`pandas`
-# {cite}`scipy`
-# {cite}`plot`
-# {cite}`catch22`
-# {cite}`sklearn`
-# {cite}`numba`
-# {cite}`levdist`
-# {cite}`serial`
-
+# The following python packages were used in this report: Numpy {cite}`numpy`, Pandas {cite}`pandas`, Scipy {cite}`scipy`, matplotlib {cite}`plot`, catch22 {cite}`catch22`, sci-kit learn {cite}`sklearn`, numba {cite}`numba`, levdist {cite}`levdist`, and pyserial {cite}`serial`
+# 
+# 
 # ```{bibliography}
+# :all:
 # ```
-
-# http://blog.juliusschulz.de/blog/ultimate-ipython-notebook
-
-# In[ ]:
-
-
-
-

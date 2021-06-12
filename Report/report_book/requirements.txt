@@ -1,3 +1,9 @@
-jupyter-book
-matplotlib
-numpy
+catch22==0.2.0
+matplotlib==3.3.1
+numpy==1.20.3
+scipy==1.5.2
+weighted_levenshtein==0.2.1
+pandas==1.2.3
+numba==0.53.1
+pyserial==3.5
+scikit_learn==0.24.2
